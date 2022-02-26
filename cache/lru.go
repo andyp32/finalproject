@@ -3,48 +3,99 @@ package cache
 // An LRU is a fixed-size in-memory cache with least-recently-used eviction
 type LRU struct {
 	// whatever fields you want here
+	front       int
+	back        int
+	limit       int
+	inUse       int
+	numBindings int
+	// key string, val: {starting point in array, # bytes}
+	location map[string][]byte
+	// storage  *byte
+	// queue []int
+	hits   int
+	misses int
+	// current int
 }
 
 // NewLRU returns a pointer to a new LRU with a capacity to store limit bytes
 func NewLru(limit int) *LRU {
-	return new(LRU)
+	lru := new(LRU)
+	lru.front = 0
+	lru.back = 0
+	lru.limit = limit
+	// lru.current = 0
+	// lru.storage = byte[limit]
+	lru.location = make(map[string][]byte)
+	// lru.queue = make([]int, limit)
+	lru.hits = 0
+	lru.misses = 0
+	return lru
 }
 
 // MaxStorage returns the maximum number of bytes this LRU can store
 func (lru *LRU) MaxStorage() int {
-	return 0
+	return lru.limit
 }
 
 // RemainingStorage returns the number of unused bytes available in this LRU
 func (lru *LRU) RemainingStorage() int {
-	return 0
+	return lru.limit - lru.inUse
+
 }
 
 // Get returns the value associated with the given key, if it exists.
 // This operation counts as a "use" for that key-value pair
 // ok is true if a value was found and false otherwise.
 func (lru *LRU) Get(key string) (value []byte, ok bool) {
-	return nil, false
+	val, ok := lru.location[key]
+	if ok {
+		lru.hits++
+	} else {
+		lru.misses++
+	}
+
+	// get fifo.storge[val] from storage
+
+	return val, ok
 }
 
 // Remove removes and returns the value associated with the given key, if it exists.
 // ok is true if a value was found and false otherwise
 func (lru *LRU) Remove(key string) (value []byte, ok bool) {
-	return nil, false
+	if val, ok := lru.location[key]; ok {
+		delete(lru.location, key)
+		// for i := range lru.queue {
+		// 	fmt.Println(i)
+		// }
+		// get fifo.storge[val] from storage
+		lru.hits++
+		lru.numBindings--
+		return val, ok
+	} else {
+		lru.misses++
+		return nil, false
+	}
 }
 
 // Set associates the given value with the given key, possibly evicting values
 // to make room. Returns true if the binding was added successfully, else false.
 func (lru *LRU) Set(key string, value []byte) bool {
+	if lru.RemainingStorage() > 0 {
+		lru.location[key] = value
+		lru.numBindings++
+		return true
+	} else {
+
+	}
 	return false
 }
 
 // Len returns the number of bindings in the LRU.
 func (lru *LRU) Len() int {
-	return 0
+	return lru.numBindings
 }
 
 // Stats returns statistics about how many search hits and misses have occurred.
 func (lru *LRU) Stats() *Stats {
-	return &Stats{}
+	return &Stats{Hits: lru.hits, Misses: lru.misses}
 }
