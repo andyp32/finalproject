@@ -43,27 +43,7 @@ func (fifo *FIFO) MaxStorage() int {
 func (fifo *FIFO) RemainingStorage() int {
 	return fifo.limit - fifo.inUse
 }
-func (fifo *FIFO) PlaceNodeFront(current *Node) bool {
-	if current == fifo.front {
-		// Do nothing
-	} else if current == fifo.back {
-		// current=back; current -> front; current = front; front -> next
-		fifo.back = current.previous
-		fifo.back.next = nil
 
-		current.next = fifo.front
-		current.previous = nil
-		fifo.front = current
-	} else {
-		// current=middle; current -> front; current = front; front -> next
-		current.next.previous = current.previous
-		current.previous.next = current.next
-		current.next = fifo.front
-		current.previous = nil
-		fifo.front = current
-	}
-	return true
-}
 func (fifo *FIFO) DeleteNode(current *Node) bool {
 
 	if fifo.numBindings == 1 {
@@ -117,7 +97,6 @@ func (fifo *FIFO) CreateNode(key string, value []byte) bool {
 func (fifo *FIFO) Get(key string) (value []byte, ok bool) {
 	val, ok := fifo.location[key]
 	if ok {
-		// fifo.PlaceNodeFront(val)
 		fifo.hits++
 		return val.value, ok
 
@@ -151,8 +130,10 @@ func (fifo *FIFO) Set(key string, value []byte) bool {
 	//  NOT SURE
 	if val, ok := fifo.location[key]; ok {
 		if val.size >= size {
-			fifo.DeleteNode(val)
-			fifo.CreateNode(key, value)
+			val.value = value
+			fifo.inUse += len(value) - len(val.value)
+			val.size = size
+			val.
 			return true
 		}
 		return false
