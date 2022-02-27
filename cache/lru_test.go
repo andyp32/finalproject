@@ -13,6 +13,7 @@
 package cache
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -26,36 +27,36 @@ import (
 /******************************************************************************/
 
 func TestLRU(t *testing.T) {
-	// capacity := 64
-	// lru := NewLru(capacity)
-	// checkCapacity(t, lru, capacity)
-	// for i := 0; i < 4; i++ {
+	capacity := 64
+	lru := NewLru(capacity)
+	checkCapacity(t, lru, capacity)
+	for i := 0; i < 4; i++ {
 
-	// 	key := fmt.Sprintf("key%d", i)
-	// 	val := []byte(key)
-	// 	ok := lru.Set(key, val)
+		key := fmt.Sprintf("key%d", i)
+		val := []byte(key)
+		ok := lru.Set(key, val)
 
-	// 	if !ok {
-	// 		t.Errorf("Failed to add binding with key: %s", key)
-	// 		t.FailNow()
-	// 	}
+		if !ok {
+			t.Errorf("Failed to add binding with key: %s", key)
+			t.FailNow()
+		}
 
-	// 	res, _ := lru.Get(key)
-	// 	if !bytesEqual(res, val) {
-	// 		t.Errorf("Wrong value %s for binding with key: %s", res, key)
-	// 		t.FailNow()
-	// 	}
+		res, _ := lru.Get(key)
+		if !bytesEqual(res, val) {
+			t.Errorf("Wrong value %s for binding with key: %s", res, key)
+			t.FailNow()
+		}
 
-	// }
-	// testkey := "key0"
+	}
+	testkey := "key0"
 
-	// res1, _ := lru.Remove(testkey)
-	// val := []byte(testkey)
+	res1, _ := lru.Remove(testkey)
+	val := []byte(testkey)
 
-	// if !bytesEqual(res1, val) {
-	// 	t.Errorf("Wrong value %s for removal of key: %s", res1, testkey)
-	// 	t.FailNow()
-	// }
+	if !bytesEqual(res1, val) {
+		t.Errorf("Wrong value %s for removal of key: %s", res1, testkey)
+		t.FailNow()
+	}
 	// res1, _ := lru.(testkey)
 	// val := []byte(testkey)
 

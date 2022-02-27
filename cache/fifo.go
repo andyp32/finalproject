@@ -117,7 +117,7 @@ func (fifo *FIFO) CreateNode(key string, value []byte) bool {
 func (fifo *FIFO) Get(key string) (value []byte, ok bool) {
 	val, ok := fifo.location[key]
 	if ok {
-		fifo.PlaceNodeFront(val)
+		// fifo.PlaceNodeFront(val)
 		fifo.hits++
 		return val.value, ok
 
@@ -147,7 +147,8 @@ func (fifo *FIFO) Set(key string, value []byte) bool {
 
 	size := len(key) + len(value)
 
-	// if binding exists update old value, if size permits
+	// if binding exists update old value, if size permits?????
+	//  NOT SURE
 	if val, ok := fifo.location[key]; ok {
 		if val.size >= size {
 			fifo.DeleteNode(val)
