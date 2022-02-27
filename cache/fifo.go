@@ -103,7 +103,6 @@ func (fifo *FIFO) Set(key string, value []byte) bool {
 	if fifo.RemainingStorage() > 0 {
 		fifo.location[key] = value
 		fifo.numBindings++
-		fifo.numBindings++
 		fifo.queue[fifo.numBindings] = key
 		return true
 	} else {
