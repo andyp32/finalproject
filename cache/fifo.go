@@ -87,7 +87,7 @@ func (fifo *FIFO) DeleteNode(current *Node) bool {
 func (fifo *FIFO) CreateNode(key string, value []byte) bool {
 	size := len(key) + len(value)
 
-	if fifo.back == fifo.front {
+	if fifo.numBindings == 0 {
 		fifo.front.key = key
 		fifo.front.value = value
 		fifo.location[key] = fifo.front
