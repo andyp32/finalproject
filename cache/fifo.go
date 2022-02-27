@@ -58,26 +58,38 @@ func (fifo *FIFO) Get(key string) (value []byte, ok bool) {
 
 // Pop first in first out value
 func (fifo *FIFO) Pop() string {
-	first := fifo.queue[0]
-	fifo.PopKey(first)
+	first := fifo.queue[fifo.front]
+	fifo.front = (fifo.front + 1) % fifo.limit
 	return first
+
 }
 
-// Pop first in first out value
+// Pop a given key
 func (fifo *FIFO) PopKey(key string) string {
 
 	write := false
 	value := ""
-	for i, v := range fifo.queue {
-		if key == v {
-			value = v
+	tot_range := fifo.limit + fifo.front
+	length := fifo.limit
+	for i := fifo.front; i < tot_range; i++ {
+
+		if key == fifo.queue[i%length] {
+			value = fifo.queue[i%length]
 			write = true
 		} else if write {
-			fifo.queue[i-1] = v
+			fifo.queue[(i-1)%length] = fifo.queue[i%length]
 		}
 	}
 
 	return value
+}
+
+// Add a given key to end of queue
+func (fifo *FIFO) AddKey(key string) string {
+
+	fifo.queue[fifo.back] = key
+	fifo.back = (fifo.back + 1) % fifo.limit
+	return key
 }
 
 // Remove removes and returns the value associated with the given key, if it exists.
@@ -106,15 +118,14 @@ func (fifo *FIFO) Set(key string, value []byte) bool {
 		// fifo.queue[fifo.numBindings] = key
 		return true
 	} else {
-		// first := fifo.Pop()
-		// delete(fifo.location, first)
-
-		// fifo.location[key] = value
-		// fifo.queue[fifo.numBindings] = key
+		first := fifo.Pop()
+		delete(fifo.location, first)
+		fifo.location[key] = value
+		return true
 
 	}
 
-	return false
+	// return false
 }
 
 // Len returns the number of bindings in the FIFO.
