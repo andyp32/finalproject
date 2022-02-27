@@ -3,30 +3,35 @@ package cache
 // An LRU is a fixed-size in-memory cache with least-recently-used eviction
 type LRU struct {
 	// whatever fields you want here
-	front       int
-	back        int
 	limit       int
 	inUse       int
 	numBindings int
 	// key string, val: {starting point in array, # bytes}
 	location map[string][]byte
 	// storage  *byte
-	// queue []int
-	hits   int
-	misses int
+	hits     int
+	misses   int
+	root     *Node
+	lru_node *Node
 	// current int
+}
+
+type Node struct {
+	next     *Node
+	previous *Node
+	key      string
 }
 
 // NewLRU returns a pointer to a new LRU with a capacity to store limit bytes
 func NewLru(limit int) *LRU {
 	lru := new(LRU)
-	lru.front = 0
-	lru.back = 0
 	lru.limit = limit
 	// lru.current = 0
 	// lru.storage = byte[limit]
 	lru.location = make(map[string][]byte)
 	// lru.queue = make([]int, limit)
+	lru.root = new(Node)
+	lru.lru_node = lru.root
 	lru.hits = 0
 	lru.misses = 0
 	return lru
@@ -59,15 +64,57 @@ func (lru *LRU) Get(key string) (value []byte, ok bool) {
 	return val, ok
 }
 
+// Pop least recently used value
+func (lru *LRU) Pop() string {
+	current := lru.lru_node
+	value := lru.lru_node.key
+	lru.lru_node = lru.lru_node.previous
+	lru.lru_node.next = nil
+
+	current.key = ""
+	current.next = nil
+	current.previous = nil
+	current = nil
+	return value
+}
+
+// Pop a given key
+func (lru *LRU) PopKey(key string) string {
+	value := ""
+	current := lru.root
+	for current != nil {
+		current = current.next
+		if key == current.key && current == lru.lru_node {
+			lru.Pop()
+		} else if key == current.key {
+			value = current.key
+			current.previous.next = current.next
+			current.next.previous = current.previous
+
+			current.next = lru.root
+			current.previous = nil
+		}
+	}
+
+	return value
+}
+
+// Add a given key to end of queue
+func (lru *LRU) AddKey(key string) string {
+	current := new(Node)
+	current.key = key
+	current.next = lru.root
+	lru.root.previous = current
+	lru.root = current
+	return key
+}
+
 // Remove removes and returns the value associated with the given key, if it exists.
 // ok is true if a value was found and false otherwise
 func (lru *LRU) Remove(key string) (value []byte, ok bool) {
 	if val, ok := lru.location[key]; ok {
 		delete(lru.location, key)
-		// for i := range lru.queue {
-		// 	fmt.Println(i)
-		// }
-		// get fifo.storge[val] from storage
+		lru.PopKey(key)
 		lru.hits++
 		lru.numBindings--
 		return val, ok
