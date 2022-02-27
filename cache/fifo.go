@@ -152,14 +152,12 @@ func (fifo *FIFO) Set(key string, value []byte) bool {
 
 	if fifo.RemainingStorage() >= size {
 		fifo.CreateNode(key, value)
-
 		return true
 	} else {
 		for fifo.RemainingStorage() < size {
-			fifo.DeleteNode(fifo.front)
+			fifo.DeleteNode(fifo.back)
 		}
 		fifo.CreateNode(key, value)
-
 		return true
 	}
 	// return false
