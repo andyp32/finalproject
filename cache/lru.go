@@ -156,6 +156,25 @@ func (lru *LRU) Remove(key string) (value []byte, ok bool) {
 // Set associates the given value with the given key, possibly evicting values
 // to make room. Returns true if the binding was added successfully, else false.
 func (lru *LRU) Set(key string, value []byte) bool {
+	val, ok := lru.location[key]
+	if ok {
+		if val.next != nil && val.previous != nil {
+			val.next.previous = val.previous
+			val.previous.next = val.next
+			val.next = lru.root
+			lru.root.previous = val
+			lru.root = val
+		} else if val.next != nil {
+			lru.root = val
+		} else if val.previous != nil {
+			val.previous.next = nil
+			lru.lru_node = val.previous
+			val.next = lru.root
+			lru.root.previous = val
+			lru.root = val
+		}
+		return true
+	}
 	size := len(key) + len(value)
 	if size > lru.limit {
 		return false
