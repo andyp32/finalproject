@@ -108,7 +108,7 @@ func (fifo *FIFO) Set(key string, value []byte) bool {
 		return true
 	} else {
 		first := fifo.Pop()
-		fifo.Remove(first)
+		delete(fifo.location, first)
 
 		fifo.location[key] = value
 		fifo.queue[fifo.numBindings] = key
