@@ -143,7 +143,7 @@ func (lru *LRU) Set(key string, value []byte) bool {
 	// if binding exists update old value, if size permits?????
 	//  NOT SURE
 	if val, ok := lru.location[key]; ok {
-		if val.size >= size {
+		if lru.RemainingStorage() >= size {
 			lru.DeleteNode(val)
 			lru.CreateNode(key, value)
 			return true

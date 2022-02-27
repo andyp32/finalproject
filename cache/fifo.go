@@ -129,7 +129,7 @@ func (fifo *FIFO) Set(key string, value []byte) bool {
 	// if binding exists update old value, if size permits?????
 	//  NOT SURE
 	if val, ok := fifo.location[key]; ok {
-		if val.size >= size {
+		if fifo.RemainingStorage() >= size {
 			val.value = value
 			fifo.inUse += len(value) - len(val.value)
 			val.size = size
