@@ -96,6 +96,8 @@ func (fifo *FIFO) AddKey(key string) string {
 // ok is true if a value was found and false otherwise
 func (fifo *FIFO) Remove(key string) (value []byte, ok bool) {
 	if val, ok := fifo.location[key]; ok {
+		fifo.inUse += -len(key) - len(fifo.location[key])
+
 		delete(fifo.location, key)
 		fifo.PopKey(key)
 		// get fifo.storge[val] from storage
@@ -111,18 +113,25 @@ func (fifo *FIFO) Remove(key string) (value []byte, ok bool) {
 // Set associates the given value with the given key, possibly evicting values
 // to make room. Returns true if the binding was added successfully, else false.
 func (fifo *FIFO) Set(key string, value []byte) bool {
-
-	if fifo.RemainingStorage() > 0 {
+	size := len(key) + len(value)
+	if fifo.RemainingStorage() >= size {
 		fifo.location[key] = value
 		fifo.numBindings++
 		fifo.AddKey(key)
+		fifo.inUse += size
 		// fifo.queue[fifo.numBindings] = key
 		return true
 	} else {
 		first := fifo.Pop()
+		fifo.inUse += -len(first) - len(fifo.location[first])
 		delete(fifo.location, first)
+		if fifo.RemainingStorage() < size {
+			return false
+		}
 		fifo.location[key] = value
 		fifo.AddKey(key)
+		fifo.inUse += size
+
 		return true
 
 	}
