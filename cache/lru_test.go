@@ -30,11 +30,12 @@ func TestLRU(t *testing.T) {
 	capacity := 64
 	lru := NewLru(capacity)
 	checkCapacity(t, lru, capacity)
-
 	for i := 0; i < 4; i++ {
+
 		key := fmt.Sprintf("key%d", i)
 		val := []byte(key)
 		ok := lru.Set(key, val)
+
 		if !ok {
 			t.Errorf("Failed to add binding with key: %s", key)
 			t.FailNow()
@@ -45,5 +46,7 @@ func TestLRU(t *testing.T) {
 			t.Errorf("Wrong value %s for binding with key: %s", res, key)
 			t.FailNow()
 		}
+		fmt.Println(i)
+
 	}
 }
