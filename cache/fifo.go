@@ -10,10 +10,10 @@ type FIFO struct {
 	// key string, val: {starting point in array, # bytes}
 	location map[string][]byte
 	// storage  *byte
-	queue   []string
-	hits    int
-	misses  int
-	current int
+	queue  []string
+	hits   int
+	misses int
+	// current int
 }
 
 // NewFIFO returns a pointer to a new FIFO with a capacity to store limit bytes
@@ -22,7 +22,7 @@ func NewFifo(limit int) *FIFO {
 	fifo.front = 0
 	fifo.back = 0
 	fifo.limit = limit
-	fifo.current = 0
+	// fifo.current = 0
 	// fifo.storage = byte[limit]
 	fifo.location = make(map[string][]byte)
 	fifo.queue = make([]string, limit)
@@ -103,7 +103,7 @@ func (fifo *FIFO) Set(key string, value []byte) bool {
 	if fifo.RemainingStorage() > 0 {
 		fifo.location[key] = value
 		fifo.numBindings++
-		fifo.queue[fifo.numBindings] = key
+		// fifo.queue[fifo.numBindings] = key
 		return true
 	} else {
 		// first := fifo.Pop()
