@@ -149,10 +149,10 @@ func (lru *LRU) Get(key string) (value []byte, ok bool) {
 func (lru *LRU) Remove(key string) (value []byte, ok bool) {
 	if val, ok := lru.location[key]; ok {
 		lru.DeleteNode(val)
-		lru.hits++
+		// lru.hits++
 		return val.value, ok
 	} else {
-		lru.misses++
+		// lru.misses++
 		return nil, false
 	}
 }
