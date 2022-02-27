@@ -114,6 +114,9 @@ func (fifo *FIFO) Remove(key string) (value []byte, ok bool) {
 // to make room. Returns true if the binding was added successfully, else false.
 func (fifo *FIFO) Set(key string, value []byte) bool {
 	size := len(key) + len(value)
+	if size > fifo.limit {
+		return false
+	}
 	if fifo.RemainingStorage() >= size {
 		fifo.location[key] = value
 		fifo.numBindings++
@@ -122,16 +125,14 @@ func (fifo *FIFO) Set(key string, value []byte) bool {
 		// fifo.queue[fifo.numBindings] = key
 		return true
 	} else {
-		first := fifo.Pop()
-		fifo.inUse += -len(first) - len(fifo.location[first])
-		delete(fifo.location, first)
-		if fifo.RemainingStorage() < size {
-			return false
+		for fifo.RemainingStorage() < size {
+			first := fifo.Pop()
+			fifo.inUse += -len(first) - len(fifo.location[first])
+			delete(fifo.location, first)
 		}
 		fifo.location[key] = value
 		fifo.AddKey(key)
 		fifo.inUse += size
-
 		return true
 
 	}
