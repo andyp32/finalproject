@@ -15,9 +15,9 @@ type FIFO struct {
 }
 
 type Node struct {
-	next     *Node
 	previous *Node
 	key      string
+	next     *Node
 	value    []byte
 	size     int
 }
@@ -99,7 +99,6 @@ func (fifo *FIFO) Get(key string) (value []byte, ok bool) {
 	if ok {
 		fifo.hits++
 		return val.value, ok
-
 	} else {
 		fifo.misses++
 		return nil, false
@@ -116,7 +115,6 @@ func (fifo *FIFO) Remove(key string) (value []byte, ok bool) {
 	} else {
 		fifo.misses++
 		return nil, false
-
 	}
 }
 

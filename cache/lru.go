@@ -39,14 +39,21 @@ func (lru *LRU) RemainingStorage() int {
 func (lru *LRU) PlaceNodeFront(current *Node) bool {
 	if current == lru.front {
 		// Do nothing
-	} else if current == lru.back {
+	} else if lru.numBindings == 2 {
 		// current=back; current -> front; current = front; front -> next
 		lru.back = current.previous
-		lru.back.next = nil
 
 		current.next = lru.front
-		current.previous = nil
 		lru.front = current
+		lru.front.next = lru.back
+		lru.back.previous = lru.front
+		lru.front.previous = nil
+		lru.back.next = nil
+
+		// fmt.Println("======================================")
+		// fmt.Println(lru.back)
+		// fmt.Println("======================================")
+		// fmt.Println(lru.front)
 	} else {
 		// current=middle; current -> front; current = front; front -> next
 		current.next.previous = current.previous
@@ -62,6 +69,7 @@ func (lru *LRU) DeleteNode(current *Node) bool {
 	if lru.numBindings == 1 {
 	} else if current == lru.back {
 		// current=back; current -> front; current = front; front -> next
+
 		lru.back = current.previous
 	} else if current == lru.front {
 		lru.front = current.next
@@ -86,6 +94,21 @@ func (lru *LRU) CreateNode(key string, value []byte) bool {
 		lru.front.value = value
 		lru.location[key] = lru.front
 
+	} else if lru.numBindings == 1 {
+		new_node := new(Node)
+		new_node.next = lru.front
+		new_node.previous = nil
+		new_node.value = value
+		new_node.key = key
+		new_node.size = size
+		lru.front.previous = new_node
+		lru.front = new_node
+		lru.location[key] = new_node
+
+		lru.back = lru.front.next
+		lru.back.previous = lru.front
+		lru.front.previous = nil
+		lru.back.next = nil
 	} else {
 		new_node := new(Node)
 		new_node.next = lru.front
@@ -156,12 +179,14 @@ func (lru *LRU) Set(key string, value []byte) bool {
 	} else {
 
 		if lru.RemainingStorage() >= size {
+
 			lru.CreateNode(key, value)
 			return true
 		} else {
 			for lru.RemainingStorage() < size {
 				lru.DeleteNode(lru.back)
 			}
+
 			lru.CreateNode(key, value)
 			return true
 		}
