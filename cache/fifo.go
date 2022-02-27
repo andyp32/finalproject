@@ -19,6 +19,7 @@ type Node struct {
 	previous *Node
 	key      string
 	value    []byte
+	size     int
 }
 
 // NewFIFO returns a pointer to a new FIFO with a capacity to store limit bytes
@@ -98,12 +99,13 @@ func (fifo *FIFO) CreateNode(key string, value []byte) bool {
 		new_node.previous = nil
 		new_node.value = value
 		new_node.key = key
-
+		new_node.size = size
 		fifo.front.previous = new_node
 		fifo.front = new_node
 
 		fifo.location[key] = new_node
 	}
+
 	fifo.inUse += size
 	fifo.numBindings++
 	return true
@@ -144,19 +146,32 @@ func (fifo *FIFO) Remove(key string) (value []byte, ok bool) {
 func (fifo *FIFO) Set(key string, value []byte) bool {
 
 	size := len(key) + len(value)
-	if size > fifo.limit {
-		return false
-	}
 
-	if fifo.RemainingStorage() >= size {
-		fifo.CreateNode(key, value)
-		return true
-	} else {
-		for fifo.RemainingStorage() < size {
-			fifo.DeleteNode(fifo.back)
+	// if binding exists update old value, if size permits
+	if val, ok := fifo.location[key]; ok {
+		if val.size >= size {
+			fifo.DeleteNode(val)
+			fifo.CreateNode(key, value)
+			return true
 		}
-		fifo.CreateNode(key, value)
-		return true
+		return false
+
+		// else if a existing binding is not found then need to create from scratch
+	} else {
+		if size > fifo.limit {
+			return false
+		}
+
+		if fifo.RemainingStorage() >= size {
+			fifo.CreateNode(key, value)
+			return true
+		} else {
+			for fifo.RemainingStorage() < size {
+				fifo.DeleteNode(fifo.back)
+			}
+			fifo.CreateNode(key, value)
+			return true
+		}
 	}
 	// return false
 }
