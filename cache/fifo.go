@@ -2,30 +2,32 @@ package cache
 
 // An FIFO is a fixed-size in-memory cache with first-in first-out eviction
 type FIFO struct {
-	front       int
-	back        int
 	limit       int
 	inUse       int
 	numBindings int
 	// key string, val: {starting point in array, # bytes}
-	location map[string][]byte
-	// storage  *byte
-	queue  []string
-	hits   int
-	misses int
+	location map[string]*Node
+	front    *Node
+	back     *Node
+	hits     int
+	misses   int
 	// current int
+}
+
+type Node struct {
+	next     *Node
+	previous *Node
+	key      string
+	value    []byte
 }
 
 // NewFIFO returns a pointer to a new FIFO with a capacity to store limit bytes
 func NewFifo(limit int) *FIFO {
 	fifo := new(FIFO)
-	fifo.front = 0
-	fifo.back = 0
+	fifo.front = new(Node)
+	fifo.back = fifo.front
 	fifo.limit = limit
-	// fifo.current = 0
-	// fifo.storage = byte[limit]
-	fifo.location = make(map[string][]byte)
-	fifo.queue = make([]string, limit)
+	fifo.location = make(map[string]*Node)
 	fifo.hits = 0
 	fifo.misses = 0
 	return fifo
@@ -40,104 +42,128 @@ func (fifo *FIFO) MaxStorage() int {
 func (fifo *FIFO) RemainingStorage() int {
 	return fifo.limit - fifo.inUse
 }
+func (fifo *FIFO) PlaceNodeFront(current *Node) bool {
+	if current == fifo.front {
+		// Do nothing
+	} else if current == fifo.back {
+		// current=back; current -> front; current = front; front -> next
+		fifo.back = current.previous
+		fifo.back.next = nil
+
+		current.next = fifo.front
+		current.previous = nil
+		fifo.front = current
+	} else {
+		// current=middle; current -> front; current = front; front -> next
+		current.next.previous = current.previous
+		current.previous.next = current.next
+		current.next = fifo.front
+		current.previous = nil
+		fifo.front = current
+	}
+	return true
+}
+func (fifo *FIFO) DeleteNode(current *Node) bool {
+	if current == fifo.back {
+		// current=back; current -> front; current = front; front -> next
+		fifo.back = current.previous
+		delete(fifo.location, current.key)
+		current = nil
+	} else if current == fifo.front {
+		fifo.front = current.next
+		delete(fifo.location, current.key)
+		current = nil
+
+	} else {
+		// current=middle; current -> front; current = front; front -> next
+		current.next.previous = current.previous
+		current.previous.next = current.next
+		delete(fifo.location, current.key)
+		current = nil
+
+	}
+	return true
+}
+func (fifo *FIFO) CreateNode(key string, value []byte) bool {
+	if fifo.back == fifo.front {
+		fifo.front.key = key
+		fifo.front.value = value
+		fifo.location[key] = fifo.front
+
+	} else {
+		new_node := new(Node)
+		new_node.next = fifo.front
+		new_node.previous = nil
+		new_node.value = value
+		new_node.key = key
+
+		fifo.front.previous = new_node
+		fifo.front = new_node
+
+		fifo.location[key] = new_node
+	}
+	return true
+
+}
 
 // Get returns the value associated with the given key, if it exists.
 // ok is true if a value was found and false otherwise.
 func (fifo *FIFO) Get(key string) (value []byte, ok bool) {
 	val, ok := fifo.location[key]
 	if ok {
+		fifo.PlaceNodeFront(val)
 		fifo.hits++
 	} else {
 		fifo.misses++
 	}
-
-	// get fifo.storge[val] from storage
-
-	return val, ok
-}
-
-// Pop first in first out value
-func (fifo *FIFO) Pop() string {
-	first := fifo.queue[fifo.front]
-	fifo.front = (fifo.front + 1) % fifo.limit
-	return first
-
-}
-
-// Pop a given key
-func (fifo *FIFO) PopKey(key string) string {
-
-	write := false
-	value := ""
-	tot_range := fifo.limit + fifo.front
-	length := fifo.limit
-	for i := fifo.front; i < tot_range; i++ {
-
-		if key == fifo.queue[i%length] {
-			value = fifo.queue[i%length]
-			write = true
-		} else if write {
-			fifo.queue[(i-1)%length] = fifo.queue[i%length]
-		}
-	}
-
-	return value
-}
-
-// Add a given key to end of queue
-func (fifo *FIFO) AddKey(key string) string {
-
-	fifo.queue[fifo.back] = key
-	fifo.back = (fifo.back + 1) % fifo.limit
-	return key
+	return val.value, ok
 }
 
 // Remove removes and returns the value associated with the given key, if it exists.
 // ok is true if a value was found and false otherwise
 func (fifo *FIFO) Remove(key string) (value []byte, ok bool) {
 	if val, ok := fifo.location[key]; ok {
-		fifo.inUse += -len(key) - len(fifo.location[key])
-
-		delete(fifo.location, key)
-		fifo.PopKey(key)
-		// get fifo.storge[val] from storage
+		fifo.inUse += -len(key) - len(fifo.location[key].value)
+		fifo.DeleteNode(val)
 		fifo.hits++
 		fifo.numBindings--
-		return val, ok
+		return val.value, ok
 	} else {
 		fifo.misses++
-		return nil, false
 	}
+	return nil, false
+
 }
 
 // Set associates the given value with the given key, possibly evicting values
 // to make room. Returns true if the binding was added successfully, else false.
 func (fifo *FIFO) Set(key string, value []byte) bool {
+
 	size := len(key) + len(value)
 	if size > fifo.limit {
 		return false
 	}
+
 	if fifo.RemainingStorage() >= size {
-		fifo.location[key] = value
+		fifo.CreateNode(key, value)
 		fifo.numBindings++
-		fifo.AddKey(key)
 		fifo.inUse += size
-		// fifo.queue[fifo.numBindings] = key
+
 		return true
 	} else {
-		for fifo.RemainingStorage() < size {
-			first := fifo.Pop()
-			fifo.inUse += -len(first) - len(fifo.location[first])
-			delete(fifo.location, first)
-		}
-		fifo.location[key] = value
-		fifo.AddKey(key)
-		fifo.inUse += size
-		return true
+		// for fifo.RemainingStorage() < size {
+		// first := fifo.Pop()
+		// fifo.inUse += -len(first) - len(fifo.location[first].value)
+		// delete(fifo.location, first)
+		// }
+		// fifo.location[key].value = value
+		// fifo.AddKey(key)
+		// fifo.inUse += size
+		// return true
 
 	}
 
-	// return false
+	return false
 }
 
 // Len returns the number of bindings in the FIFO.

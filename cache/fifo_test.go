@@ -39,6 +39,7 @@ func TestFIFO(t *testing.T) {
 			t.Errorf("Failed to add binding with key: %s", key)
 			t.FailNow()
 		}
+		// fmt.Println("Round", i)
 
 		res, _ := fifo.Get(key)
 		if !bytesEqual(res, val) {
