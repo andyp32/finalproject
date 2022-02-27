@@ -110,10 +110,10 @@ func (fifo *FIFO) Get(key string) (value []byte, ok bool) {
 func (fifo *FIFO) Remove(key string) (value []byte, ok bool) {
 	if val, ok := fifo.location[key]; ok {
 		fifo.DeleteNode(val)
-		fifo.hits++
+		// fifo.hits++
 		return val.value, ok
 	} else {
-		fifo.misses++
+		// fifo.misses++
 		return nil, false
 	}
 }
