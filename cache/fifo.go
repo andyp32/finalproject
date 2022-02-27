@@ -64,24 +64,22 @@ func (fifo *FIFO) PlaceNodeFront(current *Node) bool {
 	return true
 }
 func (fifo *FIFO) DeleteNode(current *Node) bool {
-	if current == fifo.back {
+
+	if fifo.numBindings == 1 {
+	} else if current == fifo.back {
 		// current=back; current -> front; current = front; front -> next
 		fifo.back = current.previous
-		delete(fifo.location, current.key)
-		current = nil
 	} else if current == fifo.front {
 		fifo.front = current.next
-		delete(fifo.location, current.key)
-		current = nil
-
 	} else {
 		// current=middle; current -> front; current = front; front -> next
 		current.next.previous = current.previous
 		current.previous.next = current.next
-		current = nil
 	}
-	delete(fifo.location, current.key)
+
 	fifo.inUse += -len(current.key) - len(fifo.location[current.key].value)
+	delete(fifo.location, current.key)
+	current = nil
 	fifo.numBindings--
 
 	return true
