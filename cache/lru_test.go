@@ -46,7 +46,15 @@ func TestLRU(t *testing.T) {
 			t.Errorf("Wrong value %s for binding with key: %s", res, key)
 			t.FailNow()
 		}
-		fmt.Println(i)
 
+	}
+	testkey := "key0"
+
+	res1, _ := lru.Remove(testkey)
+	val := []byte(testkey)
+
+	if !bytesEqual(res1, val) {
+		t.Errorf("Wrong value %s for removal of key: %s", res1, testkey)
+		t.FailNow()
 	}
 }

@@ -69,6 +69,7 @@ func (lru *LRU) Get(key string) (value []byte, ok bool) {
 			lru.hits++
 		} else if val.previous != nil {
 			val.previous.next = nil
+			lru.lru_node = val.previous
 			val.next = lru.root
 			lru.root.previous = val
 			lru.root = val
@@ -86,8 +87,11 @@ func (lru *LRU) Get(key string) (value []byte, ok bool) {
 
 // Pop least recently used value
 func (lru *LRU) Pop() string {
+	fmt.Println("Here")
 	current := lru.lru_node
+	fmt.Println("Here")
 	value := lru.lru_node.key
+	fmt.Println("Here")
 	lru.lru_node = lru.lru_node.previous
 	lru.lru_node.next = nil
 
@@ -100,17 +104,20 @@ func (lru *LRU) Pop() string {
 
 // Pop a given key
 func (lru *LRU) PopKey(key string) string {
+	fmt.Println("Start")
 	value := ""
 	current := lru.root
-	for current != nil {
+	for current.next != nil {
+		fmt.Println("Loop")
 		current = current.next
 		if key == current.key && current == lru.lru_node {
+			fmt.Println("Pop")
 			lru.Pop()
 		} else if key == current.key {
+			fmt.Println("hard")
 			value = current.key
 			current.previous.next = current.next
 			current.next.previous = current.previous
-
 			current.next = lru.root
 			current.previous = nil
 		}
@@ -135,7 +142,6 @@ func (lru *LRU) AddKey(key string, value []byte) *Node {
 func (lru *LRU) Remove(key string) (value []byte, ok bool) {
 	if val, ok := lru.location[key]; ok {
 		lru.inUse += -len(key) - len(lru.location[key].value)
-
 		delete(lru.location, key)
 		lru.PopKey(key)
 		lru.hits++
@@ -156,10 +162,7 @@ func (lru *LRU) Set(key string, value []byte) bool {
 	}
 	if lru.RemainingStorage() >= size {
 		new_node := lru.AddKey(key, value)
-		fmt.Println("Added")
 		lru.location[key] = new_node
-		fmt.Println("Mapped")
-
 		lru.numBindings++
 		lru.inUse += size
 		return true
