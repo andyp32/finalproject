@@ -139,11 +139,13 @@ func (lru *LRU) Remove(key string) (value []byte, ok bool) {
 func (lru *LRU) Set(key string, value []byte) bool {
 
 	size := len(key) + len(value)
-
-	// if binding exists update old value, if size permits?????
-	//  NOT SURE
+	if size > lru.limit {
+		return false
+	}
+	// if binding exists update old value, if size permits
 	if val, ok := lru.location[key]; ok {
-		if lru.RemainingStorage() >= size {
+		bytes_diff := len(value) - len(val.value) // check space needed
+		if lru.RemainingStorage() >= bytes_diff {
 			lru.DeleteNode(val)
 			lru.CreateNode(key, value)
 			return true
@@ -152,9 +154,6 @@ func (lru *LRU) Set(key string, value []byte) bool {
 
 		// else if a existing binding is not found then need to create from scratch
 	} else {
-		if size > lru.limit {
-			return false
-		}
 
 		if lru.RemainingStorage() >= size {
 			lru.CreateNode(key, value)

@@ -125,13 +125,15 @@ func (fifo *FIFO) Remove(key string) (value []byte, ok bool) {
 func (fifo *FIFO) Set(key string, value []byte) bool {
 
 	size := len(key) + len(value)
-
-	// if binding exists update old value, if size permits?????
-	//  NOT SURE
+	if size > fifo.limit {
+		return false
+	}
+	// if binding exists update old value, if size permits
 	if val, ok := fifo.location[key]; ok {
-		if fifo.RemainingStorage() >= size {
+		bytes_diff := len(value) - len(val.value) // check space needed
+		if fifo.RemainingStorage() >= bytes_diff {
 			val.value = value
-			fifo.inUse += len(value) - len(val.value)
+			fifo.inUse += bytes_diff
 			val.size = size
 			return true
 		}
@@ -139,9 +141,6 @@ func (fifo *FIFO) Set(key string, value []byte) bool {
 
 		// else if a existing binding is not found then need to create from scratch
 	} else {
-		if size > fifo.limit {
-			return false
-		}
 
 		if fifo.RemainingStorage() >= size {
 			fifo.CreateNode(key, value)
