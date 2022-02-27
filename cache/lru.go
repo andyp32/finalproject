@@ -127,14 +127,30 @@ func (lru *LRU) Remove(key string) (value []byte, ok bool) {
 // Set associates the given value with the given key, possibly evicting values
 // to make room. Returns true if the binding was added successfully, else false.
 func (lru *LRU) Set(key string, value []byte) bool {
-	if lru.RemainingStorage() > 0 {
+	size := len(key) + len(value)
+	if size > lru.limit {
+		return false
+	}
+	if lru.RemainingStorage() >= size {
 		lru.location[key] = value
 		lru.numBindings++
+		lru.AddKey(key)
+		lru.inUse += size
+		// lru.queue[lru.numBindings] = key
 		return true
 	} else {
+		for lru.RemainingStorage() < size {
+			first := lru.Pop()
+			lru.inUse += -len(first) - len(lru.location[first])
+			delete(lru.location, first)
+		}
+		lru.location[key] = value
+		lru.AddKey(key)
+		lru.inUse += size
+		return true
 
 	}
-	return false
+
 }
 
 // Len returns the number of bindings in the LRU.
