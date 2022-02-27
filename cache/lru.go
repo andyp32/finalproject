@@ -99,7 +99,7 @@ func (lru *LRU) PopKey(key string) string {
 	return value
 }
 
-// Add a given key to end of queue
+// Add a given key to beginning of lru
 func (lru *LRU) AddKey(key string) string {
 	current := new(Node)
 	current.key = key
@@ -113,6 +113,8 @@ func (lru *LRU) AddKey(key string) string {
 // ok is true if a value was found and false otherwise
 func (lru *LRU) Remove(key string) (value []byte, ok bool) {
 	if val, ok := lru.location[key]; ok {
+		lru.inUse += -len(key) - len(lru.location[key])
+
 		delete(lru.location, key)
 		lru.PopKey(key)
 		lru.hits++
