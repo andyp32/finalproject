@@ -133,7 +133,6 @@ func (fifo *FIFO) Set(key string, value []byte) bool {
 			val.value = value
 			fifo.inUse += len(value) - len(val.value)
 			val.size = size
-			val.
 			return true
 		}
 		return false
