@@ -87,6 +87,8 @@ func (fifo *FIFO) DeleteNode(current *Node) bool {
 	return true
 }
 func (fifo *FIFO) CreateNode(key string, value []byte) bool {
+	size := len(key) + len(value)
+
 	if fifo.back == fifo.front {
 		fifo.front.key = key
 		fifo.front.value = value
@@ -104,6 +106,8 @@ func (fifo *FIFO) CreateNode(key string, value []byte) bool {
 
 		fifo.location[key] = new_node
 	}
+	fifo.inUse += size
+	fifo.numBindings++
 	return true
 
 }
@@ -127,10 +131,8 @@ func (fifo *FIFO) Get(key string) (value []byte, ok bool) {
 // ok is true if a value was found and false otherwise
 func (fifo *FIFO) Remove(key string) (value []byte, ok bool) {
 	if val, ok := fifo.location[key]; ok {
-		fifo.inUse += -len(key) - len(fifo.location[key].value)
 		fifo.DeleteNode(val)
 		fifo.hits++
-		fifo.numBindings--
 		return val.value, ok
 	} else {
 		fifo.misses++
@@ -150,8 +152,6 @@ func (fifo *FIFO) Set(key string, value []byte) bool {
 
 	if fifo.RemainingStorage() >= size {
 		fifo.CreateNode(key, value)
-		fifo.numBindings++
-		fifo.inUse += size
 
 		return true
 	} else {
@@ -159,8 +159,7 @@ func (fifo *FIFO) Set(key string, value []byte) bool {
 			fifo.DeleteNode(fifo.front)
 		}
 		fifo.CreateNode(key, value)
-		fifo.inUse += size
-		fifo.numBindings++
+
 		return true
 	}
 	// return false
