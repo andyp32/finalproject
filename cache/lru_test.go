@@ -30,23 +30,43 @@ func TestLRU(t *testing.T) {
 	capacity := 100
 	lru := NewLru(capacity)
 	checkCapacity(t, lru, capacity)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
+		for j := 0; j < 2; j++ {
 
-		key := fmt.Sprintf("____%d", i)
-		val := []byte(key)
-		ok := lru.Set(key, val)
+			key := fmt.Sprintf("___%d%d", i, j)
+			val := []byte(key)
+			ok := lru.Set(key, val)
 
-		if !ok {
-			t.Errorf("Failed to add binding with key: %s", key)
-			t.FailNow()
+			if !ok {
+				t.Errorf("Failed to add binding with key: %s", key)
+				t.FailNow()
+			}
+
+			// res, _ := lru.Get(key)
+			// if !bytesEqual(res, val) {
+			// 	t.Errorf("Wrong value %s for binding with key: %s", res, key)
+			// 	t.FailNow()
+			// }
 		}
-
-		// res, _ := lru.Get(key)
-		// if !bytesEqual(res, val) {
-		// 	t.Errorf("Wrong value %s for binding with key: %s", res, key)
-		// 	t.FailNow()
-		// }
 	}
-	a, _ := lru.Get("____0")
-	fmt.Println(a)
+	for i := 3; i < 5; i++ {
+		for j := 0; j < 2; j++ {
+
+			key := fmt.Sprintf("___%d%d", i, j)
+			val := []byte(key)
+			// ok := lru.Set(key, val)
+
+			// if !ok {
+			// 	t.Errorf("Failed to add binding with key: %s", key)
+			// 	t.FailNow()
+			// }
+
+			res, _ := lru.Get(key)
+			if !bytesEqual(res, val) {
+				t.Errorf("Wrong value %s for binding with key: %s", res, key)
+				t.FailNow()
+			}
+		}
+	}
+
 }

@@ -40,10 +40,9 @@ func (lru *LRU) RemainingStorage() int {
 }
 func (lru *LRU) PlaceNodeFront(current *Node) bool {
 	if current == lru.front {
-		fmt.Println("================NOTHING======================")
-
 		// Do nothing
 	} else if lru.numBindings == 2 {
+		// fmt.Println("HEEHEerE==========RERER")
 		// current=back; current -> front; current = front; front -> next
 		lru.back = current.previous
 
@@ -55,6 +54,7 @@ func (lru *LRU) PlaceNodeFront(current *Node) bool {
 		lru.back.next = nil
 
 	} else if current == lru.back {
+		// fmt.Println("HEEHEerERERER")
 		// current=back; current -> front; current = front; front -> next
 		lru.back = current.previous
 		current.next = lru.front
@@ -65,13 +65,22 @@ func (lru *LRU) PlaceNodeFront(current *Node) bool {
 		lru.back.next = nil
 
 	} else {
+		fmt.Println("HEEHEerEMSFDIAFIAFARERER")
 
 		// current=middle; current -> front; current = front; front -> next
+		fmt.Println("=====================================")
+		fmt.Println(lru.front)
+		fmt.Println(current)
+		fmt.Println("=====================================")
 		current.next.previous = current.previous
+
 		current.previous.next = current.next
+		fmt.Println("=============32143324324")
+
 		current.next = lru.front
-		current.previous = nil
+		lru.front.previous = current
 		lru.front = current
+		lru.front.previous = nil
 	}
 	return true
 }
