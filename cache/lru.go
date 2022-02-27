@@ -1,5 +1,7 @@
 package cache
 
+import "fmt"
+
 // An LRU is a fixed-size in-memory cache with least-recently-used eviction
 type LRU struct {
 	// whatever fields you want here
@@ -38,6 +40,8 @@ func (lru *LRU) RemainingStorage() int {
 }
 func (lru *LRU) PlaceNodeFront(current *Node) bool {
 	if current == lru.front {
+		fmt.Println("================NOTHING======================")
+
 		// Do nothing
 	} else if lru.numBindings == 2 {
 		// current=back; current -> front; current = front; front -> next
@@ -50,11 +54,18 @@ func (lru *LRU) PlaceNodeFront(current *Node) bool {
 		lru.front.previous = nil
 		lru.back.next = nil
 
-		// fmt.Println("======================================")
-		// fmt.Println(lru.back)
-		// fmt.Println("======================================")
-		// fmt.Println(lru.front)
+	} else if current == lru.back {
+		// current=back; current -> front; current = front; front -> next
+		lru.back = current.previous
+		current.next = lru.front
+		lru.front.previous = current
+		lru.front = current
+
+		lru.front.previous = nil
+		lru.back.next = nil
+
 	} else {
+
 		// current=middle; current -> front; current = front; front -> next
 		current.next.previous = current.previous
 		current.previous.next = current.next
@@ -134,7 +145,10 @@ func (lru *LRU) CreateNode(key string, value []byte) bool {
 func (lru *LRU) Get(key string) (value []byte, ok bool) {
 	val, ok := lru.location[key]
 	if ok {
+		fmt.Println("here")
 		lru.PlaceNodeFront(val)
+		fmt.Println("placed")
+
 		lru.hits++
 		return val.value, ok
 
