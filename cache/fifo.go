@@ -15,11 +15,12 @@ type FIFO struct {
 }
 
 type Node struct {
-	previous *Node
-	key      string
-	next     *Node
-	value    []byte
-	size     int
+	previous  *Node
+	key       string
+	lirs_type int
+	next      *Node
+	value     []byte
+	size      int
 }
 
 // NewFIFO returns a pointer to a new FIFO with a capacity to store limit bytes
