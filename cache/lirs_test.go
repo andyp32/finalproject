@@ -29,21 +29,23 @@ func TestLIRS(t *testing.T) {
 	capacity := 64
 	lirs := NewLIRS(capacity)
 	checkCapacity(t, lirs, capacity)
+	key := "E"
+	val := []byte(key)
+	lirs.Set(key, val, HIRS)
 
-	//  for i := 0; i < 4; i++ {
-	// 	 key := fmt.Sprintf("key%d", i)
-	// 	 val := []byte(key)
-	// 	 ok := fifo.Set(key, val)
-	// 	 if !ok {
-	// 		 t.Errorf("Failed to add binding with key: %s", key)
-	// 		 t.FailNow()
-	// 	 }
-	// 	 // fmt.Println("Round", i)
+	key = "A"
+	val = []byte(key)
+	lirs.Set(key, val, LIRS_P)
 
-	// 	 res, _ := fifo.Get(key)
-	// 	 if !bytesEqual(res, val) {
-	// 		 t.Errorf("Wrong value %s for binding with key: %s", res, key)
-	// 		 t.FailNow()
-	// 	 }
-	//  }
+	key = "D"
+	val = []byte(key)
+	lirs.Set(key, val, HIRS)
+	key = "B"
+	val = []byte(key)
+	lirs.Set(key, val, LIRS_P)
+	lirs.GraphStacks()
+
+	lirs.Get("E")
+
+	lirs.GraphStacks()
 }

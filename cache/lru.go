@@ -94,12 +94,13 @@ func (lru *LRU) DeleteNode(current *Node) bool {
 
 	return true
 }
-func (lru *LRU) CreateNode(key string, value []byte) bool {
+func (lru *LRU) CreateNode(key string, value []byte, lirs_type int) bool {
 	size := len(key) + len(value)
 
 	if lru.numBindings == 0 {
 		lru.front.key = key
 		lru.front.value = value
+		lru.front.lirs_type = lirs_type
 		lru.location[key] = lru.front
 
 	} else if lru.numBindings == 1 {
@@ -109,6 +110,7 @@ func (lru *LRU) CreateNode(key string, value []byte) bool {
 		new_node.value = value
 		new_node.key = key
 		new_node.size = size
+		new_node.lirs_type = lirs_type
 		lru.front.previous = new_node
 		lru.front = new_node
 		lru.location[key] = new_node
@@ -124,6 +126,8 @@ func (lru *LRU) CreateNode(key string, value []byte) bool {
 		new_node.value = value
 		new_node.key = key
 		new_node.size = size
+		new_node.lirs_type = lirs_type
+
 		lru.front.previous = new_node
 		lru.front = new_node
 
@@ -139,12 +143,12 @@ func (lru *LRU) CreateNode(key string, value []byte) bool {
 // Get returns the value associated with the given key, if it exists.
 // This operation counts as a "use" for that key-value pair
 // ok is true if a value was found and false otherwise.
-func (lru *LRU) Get(key string) (value []byte, ok bool) {
+func (lru *LRU) Get(key string) (value *Node, ok bool) {
 	val, ok := lru.location[key]
 	if ok {
 		lru.PlaceNodeFront(val)
 		lru.hits++
-		return val.value, ok
+		return val, ok
 
 	} else {
 		lru.misses++
@@ -165,7 +169,7 @@ func (lru *LRU) Remove(key string) (value []byte, ok bool) {
 
 // Set associates the given value with the given key, possibly evicting values
 // to make room. Returns true if the binding was added successfully, else false.
-func (lru *LRU) Set(key string, value []byte) bool {
+func (lru *LRU) Set(key string, value []byte, lirs_type int) bool {
 
 	size := len(key) + len(value)
 	if size > lru.limit {
@@ -176,7 +180,7 @@ func (lru *LRU) Set(key string, value []byte) bool {
 		bytes_diff := len(value) - len(val.value) // check space needed
 		if lru.RemainingStorage() >= bytes_diff {
 			lru.DeleteNode(val)
-			lru.CreateNode(key, value)
+			lru.CreateNode(key, value, lirs_type)
 			return true
 		}
 		return false
@@ -186,14 +190,14 @@ func (lru *LRU) Set(key string, value []byte) bool {
 
 		if lru.RemainingStorage() >= size {
 
-			lru.CreateNode(key, value)
+			lru.CreateNode(key, value, lirs_type)
 			return true
 		} else {
 			for lru.RemainingStorage() < size {
 				lru.DeleteNode(lru.back)
 			}
 
-			lru.CreateNode(key, value)
+			lru.CreateNode(key, value, lirs_type)
 			return true
 		}
 	}

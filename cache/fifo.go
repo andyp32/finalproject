@@ -51,8 +51,11 @@ func (fifo *FIFO) DeleteNode(current *Node) bool {
 	} else if current == fifo.back {
 		// current=back; current -> front; current = front; front -> next
 		fifo.back = current.previous
+		fifo.back.next = nil
+		// fmt.Println("here")
 	} else if current == fifo.front {
 		fifo.front = current.next
+		fifo.front.previous = nil
 	} else {
 		// current=middle; current -> front; current = front; front -> next
 		current.next.previous = current.previous
@@ -66,23 +69,24 @@ func (fifo *FIFO) DeleteNode(current *Node) bool {
 
 	return true
 }
-func (fifo *FIFO) CreateNode(key string, value []byte) bool {
+func (fifo *FIFO) CreateNode(key string, value []byte, lirs_type int) bool {
 	size := len(key) + len(value)
 
 	if fifo.numBindings == 0 {
 		fifo.front.key = key
 		fifo.front.value = value
+		fifo.front.lirs_type = lirs_type
 		fifo.location[key] = fifo.front
-
 	} else {
 		new_node := new(Node)
-		new_node.next = fifo.front
-		new_node.previous = nil
+		new_node.previous = fifo.back
+		new_node.next = nil
 		new_node.value = value
 		new_node.key = key
 		new_node.size = size
-		fifo.front.previous = new_node
-		fifo.front = new_node
+		new_node.lirs_type = lirs_type
+		fifo.back.next = new_node
+		fifo.back = new_node
 
 		fifo.location[key] = new_node
 	}
@@ -95,11 +99,11 @@ func (fifo *FIFO) CreateNode(key string, value []byte) bool {
 
 // Get returns the value associated with the given key, if it exists.
 // ok is true if a value was found and false otherwise.
-func (fifo *FIFO) Get(key string) (value []byte, ok bool) {
+func (fifo *FIFO) Get(key string) (value *Node, ok bool) {
 	val, ok := fifo.location[key]
 	if ok {
 		fifo.hits++
-		return val.value, ok
+		return val, ok
 	} else {
 		fifo.misses++
 		return nil, false
@@ -111,17 +115,15 @@ func (fifo *FIFO) Get(key string) (value []byte, ok bool) {
 func (fifo *FIFO) Remove(key string) (value []byte, ok bool) {
 	if val, ok := fifo.location[key]; ok {
 		fifo.DeleteNode(val)
-		// fifo.hits++
 		return val.value, ok
 	} else {
-		// fifo.misses++
 		return nil, false
 	}
 }
 
 // Set associates the given value with the given key, possibly evicting values
 // to make room. Returns true if the binding was added successfully, else false.
-func (fifo *FIFO) Set(key string, value []byte) bool {
+func (fifo *FIFO) Set(key string, value []byte, lirs_type int) bool {
 
 	size := len(key) + len(value)
 	if size > fifo.limit {
@@ -134,21 +136,22 @@ func (fifo *FIFO) Set(key string, value []byte) bool {
 			val.value = value
 			fifo.inUse += bytes_diff
 			val.size = size
+			val.lirs_type = lirs_type
 			return true
 		}
 		return false
 
 		// else if a existing binding is not found then need to create from scratch
 	} else {
-
 		if fifo.RemainingStorage() >= size {
-			fifo.CreateNode(key, value)
+			fifo.CreateNode(key, value, lirs_type)
 			return true
+
 		} else {
 			for fifo.RemainingStorage() < size {
 				fifo.DeleteNode(fifo.back)
 			}
-			fifo.CreateNode(key, value)
+			fifo.CreateNode(key, value, lirs_type)
 			return true
 		}
 	}

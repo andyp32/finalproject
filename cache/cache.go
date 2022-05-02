@@ -25,7 +25,7 @@ type Cache interface {
 	// Get returns the value associated with the given key, if it exists.
 	// This operation counts as a "use" for that key-value pair
 	// ok is true if a value was found and false otherwise.
-	Get(key string) (value []byte, ok bool)
+	Get(key string) (value *Node, ok bool)
 
 	// Remove removes and returns the value associated with the given key, if it exists.
 	// ok is true if a value was found and false otherwise
@@ -33,7 +33,7 @@ type Cache interface {
 
 	// Set associates the given value with the given key, possibly evicting values
 	// to make room. Returns true if the binding was added successfully, else false.
-	Set(key string, value []byte) bool
+	Set(key string, value []byte, lirs_type int) bool
 
 	// Len returns the number of bindings in the cache.
 	Len() int
