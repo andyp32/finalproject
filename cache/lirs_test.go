@@ -336,7 +336,7 @@ func TestLen(t *testing.T) {
 // /******************************************************************************/
 
 // fill cache and query every element in cache
-func TestBasicGet(t *testing.T) {
+func TestBasicGetSuccess(t *testing.T) {
 	lirs := MakeStack()
 	value, _ := lirs.Get("A")
 	if bytes.Compare(value, []byte("A")) != 0 {
@@ -362,11 +362,10 @@ func TestBasicGet(t *testing.T) {
 	if bytes.Compare(value, []byte("E")) != 0 {
 		t.Errorf("GET failed")
 	}
-
 }
 
 // query elements not in the cache
-func TestBasicNot(t *testing.T) {
+func TestBasicGetFail(t *testing.T) {
 	lirs := MakeStack()
 	_, ok := lirs.Get("F")
 	if ok == true {
@@ -378,165 +377,153 @@ func TestBasicNot(t *testing.T) {
 	if ok == true {
 		t.Errorf("GET failed")
 	}
+}
 
+// run a more complex series of queries, trace alg, and confirm GET works as expected
+func TestComplexGetSuccess(t *testing.T) {
+	lirs := MakeStack()
+
+	// override "A"
+	lirs.Set("F", []byte("F"))
+	// lirs.GraphStacks()
+
+	// should find "F"
+	elem, _ := lirs.Get("F")
+	if bytes.Compare(elem, []byte("F")) != 0 {
+		t.Errorf("GET failed")
+	}
+
+	// remove "F"
+	lirs.Remove("F")
+	// lirs.GraphStacks()
+
+	// insert "G"
+	lirs.Set("G", []byte("G"))
+	// lirs.GraphStacks()
+
+	// should find "G"
+	elem, _ = lirs.Get("G")
+	if bytes.Compare(elem, []byte("G")) != 0 {
+		t.Errorf("GET failed")
+	}
+
+}
+
+// run a more complex series of queries, trace alg, and confirm GET works as expected
+func TestComplexGetFail(t *testing.T) {
+	lirs := MakeStack()
+
+	// override "A"
+	lirs.Set("F", []byte("F"))
+	// lirs.GraphStacks()
+
+	// should not find "A"
+	_, ok := lirs.Get("A")
+	if ok == true {
+		t.Errorf("GET failed")
+	}
+
+	// remove "F"
+	lirs.Remove("F")
+	// lirs.GraphStacks()
+
+	// // should not find "F"
+	// _, ok = lirs.Get("F")
+	// if ok == true {
+	// 	t.Errorf("GET failed")
+	// }
 }
 
 // /******************************************************************************/
 // // test REMOVE
 // /******************************************************************************/
 
+// remove elements in the cache
+func TestRemoveBasicSuccess(t *testing.T) {
+
+}
+
+// attempt to remove elements not in the cache
+func TestRemoveBasicFailure(t *testing.T) {
+
+}
+
+// run a more complex series of queries, trace alg, and confirm REMOVE works as expected
+func TestRemoveComplexSuccess(t *testing.T) {
+
+}
+
+// run a more complex series of queries, trace alg, and confirm REMOVE works as expected
+func TestRemoveComplexFailure(t *testing.T) {
+
+}
+
 // /******************************************************************************/
 // // test SET
 // /******************************************************************************/
 
-// /******************************************************************************/
-// // test insertion order into empty cache
-// /******************************************************************************/
-
-func TestAlg(t *testing.T) {
-	capacity := 5
-	lirs := NewLIRS(capacity)
-	val := []byte("X")
-
-	key := "A"
-	lirs.Set(key, val)
-	lirs.GraphStacks()
-
-	key = "B"
-	lirs.Set(key, val)
-	lirs.GraphStacks()
-
-	key = "C"
-	lirs.Set(key, val)
-	lirs.GraphStacks()
-
-	key = "D"
-	lirs.Set(key, val)
-	lirs.GraphStacks()
-
-	key = "E"
-	lirs.Set(key, val)
-	lirs.GraphStacks()
-
-	lirs.Get("C")
-	lirs.GraphStacks()
-
-	lirs.Get("A")
-	lirs.GraphStacks()
-
-	lirs.Set("F", val)
-	lirs.GraphStacks()
-
-	lirs.Set("G", val)
-	lirs.GraphStacks()
-
-	fmt.Println(lirs.inUse)
-	fmt.Println(lirs.capacity)
+// remove elements in the cache
+func TestSetBasicSuccess(t *testing.T) {
 
 }
 
-// func TestInsertEmpty3(t *testing.T) {
-// 	// capacity := 3
-// 	// lirs := NewLIRS(capacity)
-// 	// //checkCapacity(t, lirs, capacity)
-// 	// key := "E"
-// 	// val := []byte(key)
-// 	// lirs.Set(key, val)
-// 	// lirs.GraphStacks()
-// 	// fmt.Println("test1")
+// attempt to remove elements not in the cache
+func TestSetBasicFailure(t *testing.T) {
 
-// 	// key = "A"
-// 	// val = []byte(key)
-// 	// lirs.Set(key, val)
-// 	// lirs.GraphStacks()
-// 	// fmt.Println("test2")
+}
 
-// 	// key = "D"
-// 	// val = []byte(key)
-// 	// lirs.Set(key, val)
-// 	// lirs.GraphStacks()
-// 	// fmt.Println("test3")
+// run a more complex series of queries, trace alg, and confirm SET works as expected
+func TestSetComplexSuccess(t *testing.T) {
 
-// 	// key = "B"
-// 	// val = []byte(key)
-// 	// lirs.Set(key, val)
-// 	// lirs.GraphStacks()
-// 	// fmt.Println("test4")
+}
 
-// 	// lirs.Get("E")
-// 	// fmt.Println("test5")
-// 	// lirs.Remove("E")
-// 	// fmt.Println("test5")
+// run a more complex series of queries, trace alg, and confirm SET works as expected
+func TestSetComplexFailure(t *testing.T) {
 
-// 	// lirs.GraphStacks()
-// }
+}
 
-// func TInsertEmpty5(t *testing.T) {
-// 	// capacity := 5
-// 	// lirs := NewLIRS(capacity)
-// 	// //checkCapacity(t, lirs, capacity)
-// 	// key := "E"
-// 	// val := []byte(key)
-// 	// lirs.Set(key, val)
-// 	// lirs.GraphStacks()
-// 	// fmt.Println("test1")
+// /******************************************************************************/
+// test COMPLEX COMBINATIONS
+// /******************************************************************************/
 
-// 	// key = "A"
-// 	// val = []byte(key)
-// 	// lirs.Set(key, val)
-// 	// lirs.GraphStacks()
-// 	// fmt.Println("test2")
+// test sequences of REMOVE, GET, SET
+// check cache hits/misses as evidence of correctness
+func TestAlg1(t *testing.T) {
 
-// 	// key = "D"
-// 	// val = []byte(key)
-// 	// lirs.Set(key, val)
-// 	// lirs.GraphStacks()
-// 	// fmt.Println("test3")
+}
 
-// 	// key = "B"
-// 	// val = []byte(key)
-// 	// lirs.Set(key, val)
-// 	// lirs.GraphStacks()
-// 	// fmt.Println("test4")
+func TestAlg2(t *testing.T) {
 
-// 	// lirs.Get("E")
-// 	// fmt.Println("test5")
-// 	// lirs.Remove("E")
-// 	// fmt.Println("test6")
+}
 
-// 	// lirs.GraphStacks()
-// }
+func TestAlg3(t *testing.T) {
 
-// func TInsertEmpty10(t *testing.T) {
-// 	// capacity := 10
-// 	// lirs := NewLIRS(capacity)
-// 	// //checkCapacity(t, lirs, capacity)
-// 	// key := "E"
-// 	// val := []byte(key)
-// 	// lirs.Set(key, val)
-// 	// lirs.GraphStacks()
-// 	// fmt.Println("test1")
+}
 
-// 	// key = "A"
-// 	// val = []byte(key)
-// 	// lirs.Set(key, val)
-// 	// lirs.GraphStacks()
-// 	// fmt.Println("test2")
+func TestAlg4(t *testing.T) {
 
-// 	// key = "D"
-// 	// val = []byte(key)
-// 	// lirs.Set(key, val)
-// 	// lirs.GraphStacks()
-// 	// fmt.Println("test3")
+}
 
-// 	// key = "B"
-// 	// val = []byte(key)
-// 	// lirs.Set(key, val)
-// 	// lirs.GraphStacks()
-// 	// fmt.Println("test4")
+func TestAlg5(t *testing.T) {
 
-// 	// lirs.Get("E")
-// 	// fmt.Println("test5")
+}
 
-// 	// lirs.GraphStacks()
-// }
+func TestAlg6(t *testing.T) {
+
+}
+
+func TestAlg7(t *testing.T) {
+
+}
+
+func TestAlg8(t *testing.T) {
+
+}
+
+func TestAlg9(t *testing.T) {
+
+}
+
+func TestAlg10(t *testing.T) {
+
+}

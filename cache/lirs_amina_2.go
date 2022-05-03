@@ -1,8 +1,6 @@
 package cache
 
 import (
-	"fmt"
-
 	"github.com/gammazero/deque"
 )
 
@@ -58,45 +56,6 @@ func NewLIRS(capacity int) *LIRS {
 
 	return lirs
 }
-
-// func PrintStatus(i int) {
-// 	if i == LIRS_P {
-// 		fmt.Print("LIR")
-// 	} else if i == HIRS {
-// 		fmt.Print("HIR")
-
-// 	} else {
-// 		fmt.Print("HIR-NR")
-// 	}
-// }
-
-// func (lirs *LIRS) GraphStacks() (S_ *deque.Deque, Q_ *deque.Deque) {
-// 	fmt.Println("========================================")
-
-// 	S := lirs.S
-// 	Q := lirs.Q
-// 	for i := 0; i < S.Len(); i++ {
-// 		current, _ := S.At(i).(*Element)
-// 		fmt.Print(" -> ")
-// 		fmt.Print("(key: ", current.key, ", status: ")
-// 		PrintStatus(current.status)
-// 		fmt.Print(")")
-// 	}
-// 	fmt.Println()
-// 	for i := 0; i < Q.Len(); i++ {
-// 		current, _ := Q.At(i).(*Element)
-// 		fmt.Print(" -> ")
-// 		fmt.Print("(key: ", current.key, ", status: ")
-// 		PrintStatus(current.status)
-// 		fmt.Print(")")
-// 	}
-// 	fmt.Println()
-
-// 	fmt.Println("========================================")
-
-// 	return S, Q
-
-// }
 
 // MaxStorage returns the maximum number of pages this LIRS can store
 func (lirs *LIRS) MaxStorage() int {
@@ -155,7 +114,7 @@ func (lirs *LIRS) Get(key string) (value []byte, ok bool) {
 	S := lirs.S
 
 	location, ok := lirs.location[key]
-	fmt.Println(ok)
+	//fmt.Println(ok)
 	if ok {
 		// Upon accessing an HIR resident block X: This
 		// is a hit in the cache. We move it to the top of stack
@@ -169,13 +128,13 @@ func (lirs *LIRS) Get(key string) (value []byte, ok bool) {
 		if location.status == HIRS {
 			i, elem := Find(key, S)
 
-			fmt.Println("location in stack S: ", i)
+			//fmt.Println("location in stack S: ", i)
 			// not in stack S
 			if i == -1 {
 				// we leave its status in HIR and move it to the end of list Q
 				j, _ := Find(key, Q)
-				fmt.Println("index ", j)
-				fmt.Println("location in stack Q: ", j)
+				//fmt.Println("index ", j)
+				//fmt.Println("location in stack Q: ", j)
 
 				elem, ok = Q.Remove(j).(*Element)
 				if ok {
@@ -198,12 +157,12 @@ func (lirs *LIRS) Get(key string) (value []byte, ok bool) {
 
 				// move to top of stack S
 				_ = S.Remove(i)
-				fmt.Println("removed ", i, "th element in Stack S")
+				//fmt.Println("removed ", i, "th element in Stack S")
 				S.PushFront(elem)
 
 				// remove from list Q
 				j, _ := Find(key, Q)
-				fmt.Println("location in stack Q: ", j)
+				//fmt.Println("location in stack Q: ", j)
 				if j != -1 {
 					_ = Q.Remove(j)
 				}
@@ -273,7 +232,7 @@ func (lirs *LIRS) Remove(key string) (value []byte, ok bool) {
 
 	ok = false
 	i, elem1 := Find(key, S)
-	fmt.Println("location in S: ", i)
+	//fmt.Println("location in S: ", i)
 
 	checkStatus := true
 	if i != -1 {
@@ -291,7 +250,7 @@ func (lirs *LIRS) Remove(key string) (value []byte, ok bool) {
 	}
 
 	j, elem2 := Find(key, Q)
-	fmt.Println("location in Q: ", j)
+	//fmt.Println("location in Q: ", j)
 	if j != -1 {
 		Q.Remove(i)
 		//ok = true
@@ -321,9 +280,9 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 	Q := lirs.Q
 	S := lirs.S
 
-	fmt.Println("TESTING")
+	//ln("TESTING")
 	location, ok := lirs.location[key]
-	fmt.Println(ok)
+	//fmt.Println(ok)
 
 	if ok {
 		// Upon accessing an HIR resident block X: This
@@ -442,7 +401,7 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 						// update location in map
 						location = lirs.location[elem.key]
 						location.status = HIRS_NR
-						lirs.location[key] = location
+						lirs.location[elem.key] = location
 					} else {
 						// remove from location map
 						delete(lirs.location, elem.key)
@@ -498,7 +457,7 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 	} else {
 		// cache is full
 		if Q.Len() > 0 && lirs.inUse == lirs.capacity {
-			fmt.Println("OVER CAPACITY NEED TO EVICT")
+			//fmt.Println("OVER CAPACITY NEED TO EVICT")
 			// remove the HIR resident block at the front of list Q
 			elem, ok := Q.PopFront().(*Element)
 			if ok {
@@ -506,13 +465,13 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 				i, _ := Find(elem.key, S)
 				if i != -1 {
 					elem.status = HIRS_NR
-					fmt.Println("eviceted element: ", elem.key)
+					//fmt.Println("eviceted element: ", elem.key)
 					S.Set(i, elem)
 
 					// update location in map
 					location = lirs.location[elem.key]
 					location.status = HIRS_NR
-					lirs.location[key] = location
+					lirs.location[elem.key] = location
 				} else {
 					// remove from location map
 					delete(lirs.location, elem.key)
@@ -520,11 +479,11 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 				// cache is not full
 			}
 		} else if lirs.inUse < lirs.capacity {
-			fmt.Println("cache not full")
+			//fmt.Println("cache not full")
 			lirs.inUse += 1
 			// cache is full but Q is empty -- error!
 		} else {
-			fmt.Println("error")
+			//fmt.Println("error")
 			return false
 
 		}
@@ -538,8 +497,8 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 		elem.page = value
 		S.PushBack(elem)
 		Q.PushBack(elem)
-		fmt.Print("KEY: ", elem.key)
-		fmt.Print("STAT: ", elem.status)
+		//fmt.Print("KEY: ", elem.key)
+		//fmt.Print("STAT: ", elem.status)
 
 		// update location in map
 		location = lirs.location[elem.key]
@@ -549,7 +508,7 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 		lirs.stats.Misses += 1
 	}
 
-	fmt.Println("MADE TO END OF FUNC")
+	//fmt.Println("MADE TO END OF FUNC")
 	lirs.Q = Q
 	lirs.S = S
 	return true
