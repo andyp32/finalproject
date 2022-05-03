@@ -3,6 +3,8 @@ package cache
 //package hashtable
 
 import (
+	"fmt"
+
 	"github.com/gammazero/deque"
 )
 
@@ -21,9 +23,9 @@ type Element struct {
 
 type Location struct {
 	key string
-	inS bool
+	// inS bool
 	//indexS int
-	inQ bool
+	// inQ bool
 	//indexQ bool
 	// resident HIRS, non resident HIRS, or LIRS
 	status int
@@ -40,9 +42,9 @@ type LIRS struct {
 	// # of pages in use
 	inUse int
 	//  LIRS stack
-	S deque.Deque
+	S *deque.Deque
 	// resident HIR page stacks
-	Q deque.Deque
+	Q *deque.Deque
 	// tracks hits and misses
 	stats *Stats
 	// find location of element in queue S/Q
@@ -50,14 +52,14 @@ type LIRS struct {
 }
 
 // NewLRU returns a pointer to a new LRU with a capacity to store limit bytes
-func NewLirs(capacity int) *LIRS {
+func NewLIRS(capacity int) *LIRS {
 	lirs := new(LIRS)
 	lirs.capacity = capacity
 	lirs.inUse = 0
 	//lirs.Q = deque.Deque{}
 	//lirs.S = deque.Deque{}
-	lirs.Q = *deque.New()
-	lirs.S = *deque.New()
+	lirs.Q = deque.New()
+	lirs.S = deque.New()
 	lirs.location = make(map[string]Location)
 
 	// init stats
@@ -67,6 +69,28 @@ func NewLirs(capacity int) *LIRS {
 	lirs.stats = stats
 
 	return lirs
+}
+
+func (lirs *LIRS) GraphStacks() {
+	fmt.Println("========================================")
+
+	S := lirs.S
+	Q := lirs.Q
+	for i := 0; i < S.Len(); i++ {
+		current, _ := S.At(i).(*Element)
+		fmt.Print(" -> ")
+		fmt.Print("key: ", current.key, " status: ", current.status)
+	}
+	fmt.Println()
+	for i := 0; i < Q.Len(); i++ {
+		current, _ := Q.At(i).(*Element)
+		fmt.Print(" -> ")
+		fmt.Print("key: ", current.key, " status: ", current.status)
+	}
+	fmt.Println()
+
+	fmt.Println("========================================")
+
 }
 
 // MaxStorage returns the maximum number of pages this LIRS can store
@@ -79,9 +103,9 @@ func (lirs *LIRS) RemainingStorage() int {
 	return lirs.capacity - lirs.inUse
 }
 
-func (lirs *LIRS) PruneStack(S deque.Deque, Q deque.Deque) (S_ deque.Deque) {
-	for true {
-		elem, ok := S.Back().(Element)
+func (lirs *LIRS) PruneStack(S *deque.Deque, Q *deque.Deque) (S_ *deque.Deque) {
+	for S.Len() > 0 {
+		elem, ok := S.Back().(*Element)
 		if ok {
 			if elem.status == HIRS || elem.status == HIRS_NR {
 				_ = S.PopBack()
@@ -103,9 +127,9 @@ func (lirs *LIRS) PruneStack(S deque.Deque, Q deque.Deque) (S_ deque.Deque) {
 }
 
 // if not in queue, return i = -1
-func Find(key string, S deque.Deque) (i int, elem Element) {
+func Find(key string, S *deque.Deque) (i int, elem *Element) {
 	for i := 0; i < S.Len(); i++ {
-		elem, ok := S.At(i).(Element)
+		elem, ok := S.At(i).(*Element)
 		if ok {
 			if elem.key == key {
 				return i, elem
@@ -114,7 +138,7 @@ func Find(key string, S deque.Deque) (i int, elem Element) {
 	}
 
 	throwaway := new(Element)
-	return -1, *throwaway
+	return -1, throwaway
 
 }
 
@@ -126,6 +150,7 @@ func (lirs *LIRS) Get(key string) (value []byte, ok bool) {
 	S := lirs.S
 
 	location, ok := lirs.location[key]
+	fmt.Println(ok)
 	if ok {
 		// Upon accessing an HIR resident block X: This
 		// is a hit in the cache. We move it to the top of stack
@@ -138,11 +163,16 @@ func (lirs *LIRS) Get(key string) (value []byte, ok bool) {
 		// it to the end of list Q.
 		if location.status == HIRS {
 			i, elem := Find(key, S)
+
+			fmt.Println("location in stack S: ", i)
 			// not in stack S
 			if i == -1 {
 				// we leave its status in HIR and move it to the end of list Q
 				j, _ := Find(key, Q)
-				elem, ok = Q.Remove(j).(Element)
+				fmt.Println("index ", j)
+				fmt.Println("location in stack Q: ", j)
+
+				elem, ok = Q.Remove(j).(*Element)
 				if ok {
 					Q.PushBack(elem)
 					lirs.stats.Hits += 1
@@ -163,14 +193,18 @@ func (lirs *LIRS) Get(key string) (value []byte, ok bool) {
 
 				// move to top of stack S
 				_ = S.Remove(i)
+				fmt.Println("removed ", i, "th element in Stack S")
 				S.PushFront(elem)
 
 				// remove from list Q
 				j, _ := Find(key, Q)
-				_ = Q.Remove(j)
+				fmt.Println("location in stack Q: ", j)
+				if j != -1 {
+					_ = Q.Remove(j)
+				}
 
 				// The LIR block in the bottom of S is moved to the end of list Q with its status changed to HIR.
-				elemBack, ok := S.Back().(Element)
+				elemBack, ok := S.Back().(*Element)
 				if ok {
 					if elemBack.status == LIRS_P {
 						elemBack.status = HIRS
@@ -234,6 +268,7 @@ func (lirs *LIRS) Remove(key string) (value []byte, ok bool) {
 
 	ok = false
 	i, elem1 := Find(key, S)
+	fmt.Println("location in S: ", i)
 
 	if i != -1 {
 		S.Remove(i)
@@ -244,6 +279,7 @@ func (lirs *LIRS) Remove(key string) (value []byte, ok bool) {
 	}
 
 	j, elem2 := Find(key, Q)
+	fmt.Println("location in Q: ", j)
 	if j != -1 {
 		Q.Remove(i)
 		ok = true
@@ -268,7 +304,10 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 	Q := lirs.Q
 	S := lirs.S
 
+	fmt.Println("TESTING")
 	location, ok := lirs.location[key]
+	fmt.Println(ok)
+
 	if ok {
 		// Upon accessing an HIR resident block X: This
 		// is a hit in the cache. We move it to the top of stack
@@ -285,7 +324,7 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 			if i == -1 {
 				// we leave its status in HIR and move it to the end of list Q
 				j, _ := Find(key, Q)
-				elem, ok = Q.Remove(j).(Element)
+				elem, ok = Q.Remove(j).(*Element)
 				if ok {
 					elem.page = value
 					Q.PushBack(elem)
@@ -314,7 +353,7 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 				_ = Q.Remove(j)
 
 				// The LIR block in the bottom of S is moved to the end of list Q with its status changed to HIR.
-				elemBack, ok := S.Back().(Element)
+				elemBack, ok := S.Back().(*Element)
 				if ok {
 					if elemBack.status == LIRS_P {
 						elemBack.status = HIRS
@@ -374,7 +413,7 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 			// cache is full
 			if Q.Len() > 0 && lirs.inUse == lirs.capacity {
 				// remove the HIR resident block at the front of list Q
-				elem, ok := Q.PopFront().(Element)
+				elem, ok := Q.PopFront().(*Element)
 				if ok {
 					// update elem to HIRS_NR in S
 					i, _ := Find(elem.key, S)
@@ -408,7 +447,7 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 			// X is in stack S, we change its status to LIR
 			i, _ := Find(key, S)
 			if i != -1 {
-				elem, ok := S.Remove(i).(Element)
+				elem, ok := S.Remove(i).(*Element)
 				if ok {
 					elem.status = LIRS_P
 					S.PushFront(elem)
@@ -420,7 +459,7 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 
 					// and move the LIR block in the bottom of stack S to
 					// the end of list Q with its status changed to HIR.
-					elem, ok = S.PopBack().(Element)
+					elem, ok = S.PopBack().(*Element)
 					if ok {
 						elem.status = HIRS
 						Q.PushBack(elem)
@@ -447,7 +486,7 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 		// cache is full
 		if Q.Len() > 0 && lirs.inUse == lirs.capacity {
 			// remove the HIR resident block at the front of list Q
-			elem, ok := Q.PopFront().(Element)
+			elem, ok := Q.PopFront().(*Element)
 			if ok {
 				// update elem to HIRS_NR in S
 				i, _ := Find(elem.key, S)
@@ -471,6 +510,7 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 				// cache is not full
 			}
 		} else if lirs.inUse < lirs.capacity {
+			fmt.Println("cache not full")
 			lirs.inUse += 1
 			// cache is full but Q is empty -- error!
 		} else {
@@ -487,15 +527,18 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 		elem.page = value
 		S.PushBack(elem)
 		Q.PushBack(elem)
+		fmt.Print("KEY: ", elem.key)
+		fmt.Print("STAT: ", elem.status)
 
 		// update location in map
 		location = lirs.location[elem.key]
 		location.status = HIRS
-		lirs.location[key] = location
+		lirs.location[elem.key] = location
 
 		lirs.stats.Misses += 1
 	}
 
+	fmt.Println("MADE TO END OF FUNC")
 	lirs.Q = Q
 	lirs.S = S
 	return true
