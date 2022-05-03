@@ -15,6 +15,8 @@ package cache
 import (
 	"fmt"
 	"testing"
+
+	"github.com/gammazero/deque"
 )
 
 /******************************************************************************/
@@ -27,88 +29,217 @@ import (
 /******************************************************************************/
 
 /******************************************************************************/
+// test helpers
+/******************************************************************************/
+
+func PrintStatus(i int) {
+	if i == LIRS_P {
+		fmt.Print("LIR")
+	} else if i == HIRS {
+		fmt.Print("HIR")
+
+	} else {
+		fmt.Print("HIR-NR")
+	}
+}
+
+func (lirs *LIRS) GraphStacks() (S_ *deque.Deque, Q_ *deque.Deque) {
+	fmt.Println("========================================")
+
+	S := lirs.S
+	Q := lirs.Q
+	for i := 0; i < S.Len(); i++ {
+		current, _ := S.At(i).(*Element)
+		fmt.Print(" -> ")
+		fmt.Print("(key: ", current.key, ", status: ")
+		PrintStatus(current.status)
+		fmt.Print(")")
+	}
+	fmt.Println()
+	for i := 0; i < Q.Len(); i++ {
+		current, _ := Q.At(i).(*Element)
+		fmt.Print(" -> ")
+		fmt.Print("(key: ", current.key, ", status: ")
+		PrintStatus(current.status)
+		fmt.Print(")")
+	}
+	fmt.Println()
+
+	fmt.Println("========================================")
+
+	return S, Q
+
+}
+
+func MakeStack() (lirs_ *LIRS) {
+	capacity := 5
+	lirs := NewLIRS(capacity)
+
+	val := []byte("X")
+	lirs.Set("A", val)
+	lirs.Set("B", val)
+	lirs.Set("C", val)
+	lirs.Set("D", val)
+	lirs.Set("E", val)
+
+	return lirs
+
+}
+
+/******************************************************************************/
 // test prune stacks
 /******************************************************************************/
 
 // should not remove anything of the end of stack S
-func TestNoTailTrim(t *testing.T) {
-	// capacity := 10
-	// lirs := NewLIRS(capacity)
-	// key := "A"
-	// val := []byte(key)
-	// lirs.Set(key, val)
+func TestNoTailNo(t *testing.T) {
+	capacity := 10
+	lirs := NewLIRS(capacity)
+	val := []byte("X")
+	lirs.Set("A", val)
+	lirs.Set("B", val)
+	lirs.Set("C", val)
+	lirs.Set("D", val)
+	lirs.Set("E", val)
+	lirs.Set("F", val)
+	lirs.Set("G", val)
+	lirs.Set("H", val)
+	lirs.Set("I", val)
+	lirs.Set("J", val)
+	lirs.Set("K", val)
 
-	// key = "B"
-	// lirs.Set(key, val)
+	lirs.Get("A")
+	lirs.Get("B")
+	lirs.Get("D")
+	lirs.Get("A")
+	lirs.Get("F")
+	lirs.Get("G")
 
-	// key = "C"
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-	// S := lirs.PruneStack(lirs.S, lirs.Q)
-	// lirs.S = S
-	// lirs.GraphStacks()
+	lirs.GraphStacks()
+	if lirs.S.Len() != 1 {
+		t.Errorf("Building cache failed")
+	}
 
-	// key = "D"
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
+	lirs.PruneStack(lirs.S, lirs.Q)
+	lirs.GraphStacks()
 
-	// key = "E"
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-
-	// key = "F"
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-
-	// key = "G"
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-
-	// key = "H"
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-
-	// key = "I"
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-
-	// key = "J"
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
+	if lirs.S.Len() != 1 {
+		t.Errorf("Pruning failed")
+	}
 
 }
 
-// should remove X elements off the end of stack S
+// should not 2 blocks at the end of stack S
+func TestNoTailSome(t *testing.T) {
+	capacity := 10
+	lirs := NewLIRS(capacity)
+	val := []byte("X")
+	lirs.Set("A", val)
+	lirs.Set("B", val)
+	lirs.Set("C", val)
+	lirs.Set("D", val)
+	lirs.Set("E", val)
+	lirs.Set("F", val)
+	lirs.Set("G", val)
+	lirs.Set("H", val)
+	lirs.Set("I", val)
+	lirs.Set("J", val)
+	lirs.Set("K", val)
+
+	lirs.Get("A")
+	lirs.Get("B")
+	lirs.Get("D")
+	lirs.Get("A")
+	lirs.Get("F")
+	lirs.Get("G")
+	lirs.Set("L", val)
+	lirs.Set("M", val)
+	lirs.GraphStacks()
+
+	if lirs.S.Len() != 3 {
+		t.Errorf("Building cache failed")
+	}
+
+	lirs.PruneStack(lirs.S, lirs.Q)
+	lirs.GraphStacks()
+
+	if lirs.S.Len() != 1 {
+		t.Errorf("Pruning failed")
+	}
+
+}
+
+// should remove all elements off the end of stack S
 func TestTailTrim(t *testing.T) {
+	lirs := MakeStack()
+
+	lirs.PruneStack(lirs.S, lirs.Q)
+	if lirs.S.Len() != 0 {
+		t.Errorf("Pruning failed")
+	}
+
 }
 
-/******************************************************************************/
-// test find
-/******************************************************************************/
+// /******************************************************************************/
+// // test find
+// /******************************************************************************/
 
 // find 0th element
 func TestFindFirst(t *testing.T) {
+	lirs := MakeStack()
+	i, elem := Find("A", lirs.S)
+
+	if i != 0 || elem.key != "A" {
+		t.Errorf("Found wrong element")
+	}
+
 }
 
 // find last element
 func TestFindLast(t *testing.T) {
+	lirs := MakeStack()
+	i, elem := Find("E", lirs.S)
+
+	if i != 4 || elem.key != "E" {
+		t.Errorf("Found wrong element")
+	}
 }
 
 // find element in middle of stack
 func TestFindCenter(t *testing.T) {
+	lirs := MakeStack()
+	i, elem := Find("C", lirs.S)
+
+	if i != 2 || elem.key != "C" {
+		t.Errorf("Found wrong element")
+	}
 }
 
 // search for element not in stack
 func TestFindNotIn(t *testing.T) {
+
+	lirs := MakeStack()
+	i, _ := Find("F", lirs.S)
+
+	if i != -1 {
+		t.Errorf("Should not find any elements")
+	}
 }
 
 // test find on the empty stack
 func TestFindEmpty(t *testing.T) {
+	capacity := 5
+	lirs := NewLIRS(capacity)
+
+	i, _ := Find("A", lirs.S)
+
+	if i != -1 {
+		t.Errorf("Should not find any elements")
+	}
 }
 
-/******************************************************************************/
-// test basic functions
-/******************************************************************************/
+// /******************************************************************************/
+// // test basic functions
+// /******************************************************************************/
 
 func TestMaxStorage(t *testing.T) {
 	capacity := 5
@@ -122,7 +253,6 @@ func TestMaxStorage(t *testing.T) {
 	if capacity != lirs.capacity {
 		t.Errorf("Capacity incorrect")
 	}
-
 }
 
 func TestLen(t *testing.T) {
@@ -197,170 +327,170 @@ func TestLen(t *testing.T) {
 
 }
 
-/******************************************************************************/
-// test STATS
-/******************************************************************************/
+// /******************************************************************************/
+// // test STATS
+// /******************************************************************************/
 
-/******************************************************************************/
-// test GET
-/******************************************************************************/
+// /******************************************************************************/
+// // test GET
+// /******************************************************************************/
 
-/******************************************************************************/
-// test REMOVE
-/******************************************************************************/
+// /******************************************************************************/
+// // test REMOVE
+// /******************************************************************************/
 
-/******************************************************************************/
-// test SET
-/******************************************************************************/
+// /******************************************************************************/
+// // test SET
+// /******************************************************************************/
 
-/******************************************************************************/
-// test insertion order into empty cache
-/******************************************************************************/
+// /******************************************************************************/
+// // test insertion order into empty cache
+// /******************************************************************************/
 
-func TestAlg(t *testing.T) {
-	capacity := 5
-	lirs := NewLIRS(capacity)
-	val := []byte("X")
+// func TestAlg(t *testing.T) {
+// 	capacity := 5
+// 	lirs := NewLIRS(capacity)
+// 	val := []byte("X")
 
-	key := "A"
-	lirs.Set(key, val)
-	lirs.GraphStacks()
+// 	key := "A"
+// 	lirs.Set(key, val)
+// 	lirs.GraphStacks()
 
-	key = "B"
-	lirs.Set(key, val)
-	lirs.GraphStacks()
+// 	key = "B"
+// 	lirs.Set(key, val)
+// 	lirs.GraphStacks()
 
-	key = "C"
-	lirs.Set(key, val)
-	lirs.GraphStacks()
+// 	key = "C"
+// 	lirs.Set(key, val)
+// 	lirs.GraphStacks()
 
-	key = "D"
-	lirs.Set(key, val)
-	lirs.GraphStacks()
+// 	key = "D"
+// 	lirs.Set(key, val)
+// 	lirs.GraphStacks()
 
-	key = "E"
-	lirs.Set(key, val)
-	lirs.GraphStacks()
+// 	key = "E"
+// 	lirs.Set(key, val)
+// 	lirs.GraphStacks()
 
-	lirs.Get("C")
-	lirs.GraphStacks()
+// 	lirs.Get("C")
+// 	lirs.GraphStacks()
 
-	lirs.Get("A")
-	lirs.GraphStacks()
+// 	lirs.Get("A")
+// 	lirs.GraphStacks()
 
-	lirs.Set("F", val)
-	lirs.GraphStacks()
+// 	lirs.Set("F", val)
+// 	lirs.GraphStacks()
 
-	lirs.Set("G", val)
-	lirs.GraphStacks()
+// 	lirs.Set("G", val)
+// 	lirs.GraphStacks()
 
-	fmt.Println(lirs.inUse)
-	fmt.Println(lirs.capacity)
+// 	fmt.Println(lirs.inUse)
+// 	fmt.Println(lirs.capacity)
 
-}
+// }
 
-func TestInsertEmpty3(t *testing.T) {
-	// capacity := 3
-	// lirs := NewLIRS(capacity)
-	// //checkCapacity(t, lirs, capacity)
-	// key := "E"
-	// val := []byte(key)
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-	// fmt.Println("test1")
+// func TestInsertEmpty3(t *testing.T) {
+// 	// capacity := 3
+// 	// lirs := NewLIRS(capacity)
+// 	// //checkCapacity(t, lirs, capacity)
+// 	// key := "E"
+// 	// val := []byte(key)
+// 	// lirs.Set(key, val)
+// 	// lirs.GraphStacks()
+// 	// fmt.Println("test1")
 
-	// key = "A"
-	// val = []byte(key)
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-	// fmt.Println("test2")
+// 	// key = "A"
+// 	// val = []byte(key)
+// 	// lirs.Set(key, val)
+// 	// lirs.GraphStacks()
+// 	// fmt.Println("test2")
 
-	// key = "D"
-	// val = []byte(key)
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-	// fmt.Println("test3")
+// 	// key = "D"
+// 	// val = []byte(key)
+// 	// lirs.Set(key, val)
+// 	// lirs.GraphStacks()
+// 	// fmt.Println("test3")
 
-	// key = "B"
-	// val = []byte(key)
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-	// fmt.Println("test4")
+// 	// key = "B"
+// 	// val = []byte(key)
+// 	// lirs.Set(key, val)
+// 	// lirs.GraphStacks()
+// 	// fmt.Println("test4")
 
-	// lirs.Get("E")
-	// fmt.Println("test5")
-	// lirs.Remove("E")
-	// fmt.Println("test5")
+// 	// lirs.Get("E")
+// 	// fmt.Println("test5")
+// 	// lirs.Remove("E")
+// 	// fmt.Println("test5")
 
-	// lirs.GraphStacks()
-}
+// 	// lirs.GraphStacks()
+// }
 
-func TInsertEmpty5(t *testing.T) {
-	// capacity := 5
-	// lirs := NewLIRS(capacity)
-	// //checkCapacity(t, lirs, capacity)
-	// key := "E"
-	// val := []byte(key)
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-	// fmt.Println("test1")
+// func TInsertEmpty5(t *testing.T) {
+// 	// capacity := 5
+// 	// lirs := NewLIRS(capacity)
+// 	// //checkCapacity(t, lirs, capacity)
+// 	// key := "E"
+// 	// val := []byte(key)
+// 	// lirs.Set(key, val)
+// 	// lirs.GraphStacks()
+// 	// fmt.Println("test1")
 
-	// key = "A"
-	// val = []byte(key)
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-	// fmt.Println("test2")
+// 	// key = "A"
+// 	// val = []byte(key)
+// 	// lirs.Set(key, val)
+// 	// lirs.GraphStacks()
+// 	// fmt.Println("test2")
 
-	// key = "D"
-	// val = []byte(key)
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-	// fmt.Println("test3")
+// 	// key = "D"
+// 	// val = []byte(key)
+// 	// lirs.Set(key, val)
+// 	// lirs.GraphStacks()
+// 	// fmt.Println("test3")
 
-	// key = "B"
-	// val = []byte(key)
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-	// fmt.Println("test4")
+// 	// key = "B"
+// 	// val = []byte(key)
+// 	// lirs.Set(key, val)
+// 	// lirs.GraphStacks()
+// 	// fmt.Println("test4")
 
-	// lirs.Get("E")
-	// fmt.Println("test5")
-	// lirs.Remove("E")
-	// fmt.Println("test6")
+// 	// lirs.Get("E")
+// 	// fmt.Println("test5")
+// 	// lirs.Remove("E")
+// 	// fmt.Println("test6")
 
-	// lirs.GraphStacks()
-}
+// 	// lirs.GraphStacks()
+// }
 
-func TInsertEmpty10(t *testing.T) {
-	// capacity := 10
-	// lirs := NewLIRS(capacity)
-	// //checkCapacity(t, lirs, capacity)
-	// key := "E"
-	// val := []byte(key)
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-	// fmt.Println("test1")
+// func TInsertEmpty10(t *testing.T) {
+// 	// capacity := 10
+// 	// lirs := NewLIRS(capacity)
+// 	// //checkCapacity(t, lirs, capacity)
+// 	// key := "E"
+// 	// val := []byte(key)
+// 	// lirs.Set(key, val)
+// 	// lirs.GraphStacks()
+// 	// fmt.Println("test1")
 
-	// key = "A"
-	// val = []byte(key)
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-	// fmt.Println("test2")
+// 	// key = "A"
+// 	// val = []byte(key)
+// 	// lirs.Set(key, val)
+// 	// lirs.GraphStacks()
+// 	// fmt.Println("test2")
 
-	// key = "D"
-	// val = []byte(key)
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-	// fmt.Println("test3")
+// 	// key = "D"
+// 	// val = []byte(key)
+// 	// lirs.Set(key, val)
+// 	// lirs.GraphStacks()
+// 	// fmt.Println("test3")
 
-	// key = "B"
-	// val = []byte(key)
-	// lirs.Set(key, val)
-	// lirs.GraphStacks()
-	// fmt.Println("test4")
+// 	// key = "B"
+// 	// val = []byte(key)
+// 	// lirs.Set(key, val)
+// 	// lirs.GraphStacks()
+// 	// fmt.Println("test4")
 
-	// lirs.Get("E")
-	// fmt.Println("test5")
+// 	// lirs.Get("E")
+// 	// fmt.Println("test5")
 
-	// lirs.GraphStacks()
-}
+// 	// lirs.GraphStacks()
+// }

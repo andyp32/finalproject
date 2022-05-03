@@ -59,44 +59,44 @@ func NewLIRS(capacity int) *LIRS {
 	return lirs
 }
 
-func PrintStatus(i int) {
-	if i == LIRS_P {
-		fmt.Print("LIR")
-	} else if i == HIRS {
-		fmt.Print("HIR")
+// func PrintStatus(i int) {
+// 	if i == LIRS_P {
+// 		fmt.Print("LIR")
+// 	} else if i == HIRS {
+// 		fmt.Print("HIR")
 
-	} else {
-		fmt.Print("HIR-NR")
-	}
-}
+// 	} else {
+// 		fmt.Print("HIR-NR")
+// 	}
+// }
 
-func (lirs *LIRS) GraphStacks() (S_ *deque.Deque, Q_ *deque.Deque) {
-	fmt.Println("========================================")
+// func (lirs *LIRS) GraphStacks() (S_ *deque.Deque, Q_ *deque.Deque) {
+// 	fmt.Println("========================================")
 
-	S := lirs.S
-	Q := lirs.Q
-	for i := 0; i < S.Len(); i++ {
-		current, _ := S.At(i).(*Element)
-		fmt.Print(" -> ")
-		fmt.Print("(key: ", current.key, ", status: ")
-		PrintStatus(current.status)
-		fmt.Print(")")
-	}
-	fmt.Println()
-	for i := 0; i < Q.Len(); i++ {
-		current, _ := Q.At(i).(*Element)
-		fmt.Print(" -> ")
-		fmt.Print("(key: ", current.key, ", status: ")
-		PrintStatus(current.status)
-		fmt.Print(")")
-	}
-	fmt.Println()
+// 	S := lirs.S
+// 	Q := lirs.Q
+// 	for i := 0; i < S.Len(); i++ {
+// 		current, _ := S.At(i).(*Element)
+// 		fmt.Print(" -> ")
+// 		fmt.Print("(key: ", current.key, ", status: ")
+// 		PrintStatus(current.status)
+// 		fmt.Print(")")
+// 	}
+// 	fmt.Println()
+// 	for i := 0; i < Q.Len(); i++ {
+// 		current, _ := Q.At(i).(*Element)
+// 		fmt.Print(" -> ")
+// 		fmt.Print("(key: ", current.key, ", status: ")
+// 		PrintStatus(current.status)
+// 		fmt.Print(")")
+// 	}
+// 	fmt.Println()
 
-	fmt.Println("========================================")
+// 	fmt.Println("========================================")
 
-	return S, Q
+// 	return S, Q
 
-}
+// }
 
 // MaxStorage returns the maximum number of pages this LIRS can store
 func (lirs *LIRS) MaxStorage() int {
