@@ -237,7 +237,9 @@ func (lirs *LIRS) Remove(key string) (value []byte, ok bool) {
 	checkStatus := true
 	if i != -1 {
 		S.Remove(i)
+		//fmt.Println("REMOVAL successful")
 		S = lirs.PruneStack(S, Q)
+		//fmt.Println("PRUNE successful")
 		delete(lirs.location, key)
 		//ok = true
 
@@ -252,7 +254,8 @@ func (lirs *LIRS) Remove(key string) (value []byte, ok bool) {
 	j, elem2 := Find(key, Q)
 	//fmt.Println("location in Q: ", j)
 	if j != -1 {
-		Q.Remove(i)
+		Q.Remove(j)
+		//fmt.Println("REMOVAL successful")
 		//ok = true
 
 		// update # of in use cache slots
@@ -264,6 +267,7 @@ func (lirs *LIRS) Remove(key string) (value []byte, ok bool) {
 
 	lirs.S = S
 	lirs.Q = Q
+	delete(lirs.location, key)
 
 	if i != -1 {
 		return elem1.page, true

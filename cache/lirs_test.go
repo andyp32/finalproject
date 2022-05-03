@@ -328,16 +328,14 @@ func TestLen(t *testing.T) {
 }
 
 // /******************************************************************************/
-// // test STATS
-// /******************************************************************************/
-
-// /******************************************************************************/
 // // test GET
 // /******************************************************************************/
 
 // fill cache and query every element in cache
 func TestBasicGetSuccess(t *testing.T) {
 	lirs := MakeStack()
+
+	// fill cache then attempt to GET each element
 	value, _ := lirs.Get("A")
 	if bytes.Compare(value, []byte("A")) != 0 {
 		t.Errorf("GET failed")
@@ -367,11 +365,14 @@ func TestBasicGetSuccess(t *testing.T) {
 // query elements not in the cache
 func TestBasicGetFail(t *testing.T) {
 	lirs := MakeStack()
+
+	// attempt to GET element that was never in cache
 	_, ok := lirs.Get("F")
 	if ok == true {
 		t.Errorf("GET failed")
 	}
 
+	// remove element from cache then attempt to GET it
 	lirs.Remove("E")
 	_, ok = lirs.Get("E")
 	if ok == true {
@@ -415,7 +416,6 @@ func TestComplexGetFail(t *testing.T) {
 
 	// override "A"
 	lirs.Set("F", []byte("F"))
-	// lirs.GraphStacks()
 
 	// should not find "A"
 	_, ok := lirs.Get("A")
@@ -425,13 +425,12 @@ func TestComplexGetFail(t *testing.T) {
 
 	// remove "F"
 	lirs.Remove("F")
-	// lirs.GraphStacks()
 
-	// // should not find "F"
-	// _, ok = lirs.Get("F")
-	// if ok == true {
-	// 	t.Errorf("GET failed")
-	// }
+	// should not find "F"
+	_, ok = lirs.Get("F")
+	if ok == true {
+		t.Errorf("GET failed")
+	}
 }
 
 // /******************************************************************************/
@@ -440,22 +439,145 @@ func TestComplexGetFail(t *testing.T) {
 
 // remove elements in the cache
 func TestRemoveBasicSuccess(t *testing.T) {
+	lirs := MakeStack()
 
+	// remove all elements from cache in random order
+	lirs.Remove("A")
+	_, ok := lirs.Get("A")
+	if ok == true {
+		t.Errorf("GET failed")
+	}
+
+	lirs.Remove("C")
+	_, ok = lirs.Get("C")
+	if ok == true {
+		t.Errorf("GET failed")
+	}
+
+	lirs.Remove("E")
+	_, ok = lirs.Get("E")
+	if ok == true {
+		t.Errorf("GET failed")
+	}
+
+	lirs.Remove("B")
+	_, ok = lirs.Get("B")
+	if ok == true {
+		t.Errorf("GET failed")
+	}
+
+	lirs.Remove("D")
+	_, ok = lirs.Get("D")
+	if ok == true {
+		t.Errorf("GET failed")
+	}
 }
 
 // attempt to remove elements not in the cache
 func TestRemoveBasicFailure(t *testing.T) {
+	lirs := MakeStack()
 
+	// remove element never added to cache
+	_, ok := lirs.Remove("F")
+	if ok == true {
+		t.Errorf("GET failed")
+	}
+
+	// double remove element from cache
+	lirs.Remove("E")
+	_, ok = lirs.Remove("E")
+	if ok == true {
+		t.Errorf("GET failed")
+	}
 }
 
 // run a more complex series of queries, trace alg, and confirm REMOVE works as expected
 func TestRemoveComplexSuccess(t *testing.T) {
+	lirs := MakeStack()
+
+	// replace "A" with "F" in cache
+	lirs.Set("F", []byte("F"))
+
+	// succeed to remove HIR-NR "A" from cache
+	_, ok := lirs.Remove("A")
+	lirs.GraphStacks()
+	if ok != true {
+		t.Errorf("GET failed")
+	}
+
+	// remove "F" from cache
+	_, ok = lirs.Remove("F")
+	if ok != true {
+		t.Errorf("GET failed")
+	}
+
+	// insert 2 elements s.t. B is evicted
+	lirs.Set("G", []byte("G"))
+	lirs.Set("H", []byte("H"))
+	// verify that both new elements remove successfully
+	_, ok = lirs.Remove("G")
+	if ok != true {
+		t.Errorf("GET failed")
+	}
+	_, ok = lirs.Remove("H")
+	if ok != true {
+		t.Errorf("GET failed")
+	}
+
+	// insert 2 elements but insure that C is still in cache
+	lirs.Set("I", []byte("I"))
+	lirs.Set("J", []byte("J"))
+	_, ok = lirs.Remove("C")
+	if ok != true {
+		t.Errorf("GET failed")
+	}
 
 }
 
 // run a more complex series of queries, trace alg, and confirm REMOVE works as expected
 func TestRemoveComplexFailure(t *testing.T) {
+	lirs := MakeStack()
 
+	// remove element not in cache
+	_, ok := lirs.Remove("F")
+	if ok == true {
+		t.Errorf("GET failed")
+	}
+
+	// replace "A" with "F" in cache
+	lirs.Set("F", []byte("F"))
+
+	// succeed to remove HIR-NR "A" from cache
+	_, ok = lirs.Remove("A")
+
+	// fail to remove HIR-NR "A" from cache
+	_, ok = lirs.Remove("A")
+	if ok == true {
+		t.Errorf("GET failed")
+	}
+
+	// insert 2 elements s.t. B is evicted
+	lirs.Set("G", []byte("G"))
+	lirs.Set("H", []byte("H"))
+
+	// verify that B cant be removed
+	_, ok = lirs.Remove("B")
+	if ok == true {
+		t.Errorf("GET failed")
+	}
+
+	// improve D's score and insert 2 more elements such that E and F are evicted
+	lirs.Set("D", []byte("D"))
+	lirs.Set("I", []byte("I"))
+	lirs.Set("J", []byte("J"))
+	_, ok = lirs.Remove("E")
+	if ok == true {
+		t.Errorf("GET failed")
+	}
+	_, ok = lirs.Remove("F")
+	if ok == true {
+		t.Errorf("GET failed")
+	}
 }
 
 // /******************************************************************************/
@@ -464,22 +586,95 @@ func TestRemoveComplexFailure(t *testing.T) {
 
 // remove elements in the cache
 func TestSetBasicSuccess(t *testing.T) {
+	capacity := 5
+	lirs := NewLIRS(capacity)
 
-}
+	// confirm that all elements in the cache can be grabbed after SET
+	lirs.Set("A", []byte("A"))
+	elem, _ := lirs.Get("A")
+	if bytes.Compare(elem, []byte("A")) != 0 {
+		t.Errorf("SET failed")
+	}
 
-// attempt to remove elements not in the cache
-func TestSetBasicFailure(t *testing.T) {
+	lirs.Set("B", []byte("B"))
+	elem, _ = lirs.Get("B")
+	if bytes.Compare(elem, []byte("B")) != 0 {
+		t.Errorf("SET failed")
+	}
+
+	lirs.Set("C", []byte("C"))
+	elem, _ = lirs.Get("C")
+	if bytes.Compare(elem, []byte("C")) != 0 {
+		t.Errorf("SET failed")
+	}
+
+	lirs.Set("D", []byte("D"))
+	elem, _ = lirs.Get("D")
+	if bytes.Compare(elem, []byte("D")) != 0 {
+		t.Errorf("SET failed")
+	}
+
+	lirs.Set("E", []byte("E"))
+	elem, _ = lirs.Get("E")
+	if bytes.Compare(elem, []byte("E")) != 0 {
+		t.Errorf("SET failed")
+	}
 
 }
 
 // run a more complex series of queries, trace alg, and confirm SET works as expected
+// print visualizations to confirm algorithm is running correctly
 func TestSetComplexSuccess(t *testing.T) {
+	capacity := 5
+	lirs := NewLIRS(capacity)
 
-}
+	// confirm that all elements in the cache can be grabbed after SET
+	lirs.Set("A", []byte("A"))
+	lirs.Set("B", []byte("B"))
+	lirs.Set("C", []byte("C"))
+	lirs.Set("D", []byte("D"))
+	lirs.Set("E", []byte("E"))
 
-// run a more complex series of queries, trace alg, and confirm SET works as expected
-func TestSetComplexFailure(t *testing.T) {
+	// override "A" in cache
+	lirs.Set("F", []byte("F"))
 
+	// confirm "A" is not in cache
+	_, ok := lirs.Get("A")
+	if ok {
+		t.Errorf("SET failed")
+	}
+
+	// confirm "F" is in cache
+	elem, _ := lirs.Get("F")
+	if bytes.Compare(elem, []byte("F")) != 0 {
+		t.Errorf("SET failed")
+	}
+
+	// change value of "F" in cache and confirm new value
+	lirs.Set("F", []byte("G"))
+	elem, _ = lirs.Get("F")
+	if bytes.Compare(elem, []byte("G")) != 0 {
+		t.Errorf("SET failed")
+	}
+
+	// put "A" back in cache and confirm presence
+	lirs.Set("A", []byte("A"))
+	elem, _ = lirs.Get("A")
+	if bytes.Compare(elem, []byte("A")) != 0 {
+		t.Errorf("SET failed")
+	}
+
+	// empty cache then put "A" back in cache and cofirm presence
+	lirs.Remove("A")
+	lirs.Remove("C")
+	lirs.Remove("D")
+	lirs.Remove("E")
+	lirs.Remove("F")
+	lirs.Set("A", []byte("A"))
+	elem, _ = lirs.Get("A")
+	if bytes.Compare(elem, []byte("A")) != 0 {
+		t.Errorf("SET failed")
+	}
 }
 
 // /******************************************************************************/
@@ -497,33 +692,5 @@ func TestAlg2(t *testing.T) {
 }
 
 func TestAlg3(t *testing.T) {
-
-}
-
-func TestAlg4(t *testing.T) {
-
-}
-
-func TestAlg5(t *testing.T) {
-
-}
-
-func TestAlg6(t *testing.T) {
-
-}
-
-func TestAlg7(t *testing.T) {
-
-}
-
-func TestAlg8(t *testing.T) {
-
-}
-
-func TestAlg9(t *testing.T) {
-
-}
-
-func TestAlg10(t *testing.T) {
 
 }
