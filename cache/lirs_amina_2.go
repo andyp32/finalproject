@@ -283,11 +283,18 @@ func (lirs *LIRS) Remove(key string) (value []byte, ok bool) {
 	i, elem1 := Find(key, S)
 	fmt.Println("location in S: ", i)
 
+	checkStatus := true
 	if i != -1 {
 		S.Remove(i)
 		S = lirs.PruneStack(S, Q)
 		delete(lirs.location, key)
-		ok = true
+		//ok = true
+
+		// update # of in use cache slots
+		if elem1.status == HIRS || elem1.status == LIRS_P {
+			lirs.inUse -= 1
+			checkStatus = false
+		}
 
 	}
 
@@ -295,7 +302,12 @@ func (lirs *LIRS) Remove(key string) (value []byte, ok bool) {
 	fmt.Println("location in Q: ", j)
 	if j != -1 {
 		Q.Remove(i)
-		ok = true
+		//ok = true
+
+		// update # of in use cache slots
+		if checkStatus && (elem2.status == HIRS || elem2.status == LIRS_P) {
+			lirs.inUse -= 1
+		}
 
 	}
 
@@ -432,12 +444,8 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 					i, _ := Find(elem.key, S)
 					if i != -1 {
 						elem.status = HIRS_NR
+						elem.page = nil
 						S.Set(i, elem)
-						// elem, ok := S.Remove(i).(Element)
-						// if ok {
-						// 	elem.status = HIRS_NR
-						// 	S.PushFront(elem)
-						// }
 
 						// update location in map
 						location = lirs.location[elem.key]
@@ -498,6 +506,7 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 	} else {
 		// cache is full
 		if Q.Len() > 0 && lirs.inUse == lirs.capacity {
+			fmt.Println("OVER CAPACITY NEED TO EVICT")
 			// remove the HIR resident block at the front of list Q
 			elem, ok := Q.PopFront().(*Element)
 			if ok {
@@ -505,6 +514,7 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 				i, _ := Find(elem.key, S)
 				if i != -1 {
 					elem.status = HIRS_NR
+					fmt.Println("eviceted element: ", elem.key)
 					S.Set(i, elem)
 					// elem, ok := S.Remove(i).(Element)
 					// if ok {
@@ -527,6 +537,7 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 			lirs.inUse += 1
 			// cache is full but Q is empty -- error!
 		} else {
+			fmt.Println("error")
 			return false
 
 		}

@@ -13,6 +13,7 @@
 package cache
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -169,6 +170,9 @@ func TestAlg(t *testing.T) {
 
 	lirs.Set("G", val)
 	lirs.GraphStacks()
+
+	fmt.Println(lirs.inUse)
+	fmt.Println(lirs.capacity)
 
 }
 
