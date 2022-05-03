@@ -1,7 +1,5 @@
 package cache
 
-//package hashtable
-
 import (
 	"fmt"
 
@@ -31,10 +29,6 @@ type Location struct {
 type LIRS struct {
 	// max # of pages
 	capacity int
-	// capacity of LIR stack
-	// LIRcap int
-	// // capacity of HIR stack
-	// HIRcap int
 	// # of pages in use
 	inUse int
 	//  LIRS stack
@@ -52,8 +46,6 @@ func NewLIRS(capacity int) *LIRS {
 	lirs := new(LIRS)
 	lirs.capacity = capacity
 	lirs.inUse = 0
-	//lirs.Q = deque.Deque{}
-	//lirs.S = deque.Deque{}
 	lirs.Q = deque.New()
 	lirs.S = deque.New()
 	lirs.location = make(map[string]Location)
@@ -516,11 +508,6 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 					elem.status = HIRS_NR
 					fmt.Println("eviceted element: ", elem.key)
 					S.Set(i, elem)
-					// elem, ok := S.Remove(i).(Element)
-					// if ok {
-					// 	elem.status = HIRS_NR
-					// 	S.PushFront(elem)
-					// }
 
 					// update location in map
 					location = lirs.location[elem.key]
