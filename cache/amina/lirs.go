@@ -20,7 +20,7 @@ type LIRS struct {
 	// current int
 }
 
-// NewFIFO returns a pointer to a new FIFO with a capacity to store limit bytes
+// NewFIFO returns a pointer to a new FIFO with a capacity to store limit papges
 func NewLIRS(limit int) *LIRS {
 	lirs := new(LIRS)
 	lirs.S = NewFifo(limit)
