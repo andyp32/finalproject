@@ -102,15 +102,98 @@ func TestFindCenter(t *testing.T) {
 func TestFindNotIn(t *testing.T) {
 }
 
+// test find on the empty stack
+func TestFindEmpty(t *testing.T) {
+}
+
 /******************************************************************************/
 // test basic functions
 /******************************************************************************/
 
 func TestMaxStorage(t *testing.T) {
+	capacity := 5
+	lirs := NewLIRS(capacity)
+	if capacity != lirs.capacity {
+		t.Errorf("Capacity incorrect")
+	}
+
+	capacity = 10
+	lirs = NewLIRS(capacity)
+	if capacity != lirs.capacity {
+		t.Errorf("Capacity incorrect")
+	}
 
 }
 
 func TestLen(t *testing.T) {
+	capacity := 5
+	lirs := NewLIRS(capacity)
+	val := []byte("X")
+
+	key := "A"
+	lirs.Set(key, val)
+
+	if 1 != lirs.Len() {
+		t.Errorf("inUse incorrect")
+	}
+
+	key = "B"
+	lirs.Set(key, val)
+
+	if 2 != lirs.Len() {
+		t.Errorf("inUse incorrect")
+	}
+
+	key = "C"
+	lirs.Set(key, val)
+
+	if 3 != lirs.Len() {
+		t.Errorf("inUse incorrect")
+	}
+
+	key = "D"
+	lirs.Set(key, val)
+
+	if 4 != lirs.Len() {
+		t.Errorf("inUse incorrect")
+	}
+
+	key = "E"
+	lirs.Set(key, val)
+
+	if 5 != lirs.Len() {
+		t.Errorf("inUse incorrect")
+	}
+
+	// remove
+	lirs.Remove("E")
+
+	if 4 != lirs.Len() {
+		t.Errorf("inUse incorrect")
+	}
+
+	key = "E"
+	lirs.Set(key, val)
+
+	if 5 != lirs.Len() {
+		t.Errorf("inUse incorrect")
+	}
+
+	// replace existing key-value
+	key = "E"
+	lirs.Set(key, val)
+
+	if 5 != lirs.Len() {
+		t.Errorf("inUse incorrect")
+	}
+
+	// evict
+	key = "F"
+	lirs.Set(key, val)
+
+	if 5 != lirs.Len() {
+		t.Errorf("inUse incorrect")
+	}
 
 }
 
