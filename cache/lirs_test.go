@@ -13,6 +13,7 @@
 package cache
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -20,18 +21,18 @@ import (
 )
 
 /******************************************************************************/
-/*                                Constants                                   */
-/******************************************************************************/
-// Constants can go here
-
-/******************************************************************************/
 /*                                  Tests                                     */
 /******************************************************************************/
 
 /******************************************************************************/
-// test helpers
+// HELPER
 /******************************************************************************/
 
+func PrintStats(stats *Stats) {
+	fmt.Println("===========================")
+	fmt.Println("Hits: ", stats.Hits)
+	fmt.Println("Misses: ", stats.Misses)
+}
 func PrintStatus(i int) {
 	if i == LIRS_P {
 		fmt.Print("LIR")
@@ -75,19 +76,18 @@ func MakeStack() (lirs_ *LIRS) {
 	capacity := 5
 	lirs := NewLIRS(capacity)
 
-	val := []byte("X")
-	lirs.Set("A", val)
-	lirs.Set("B", val)
-	lirs.Set("C", val)
-	lirs.Set("D", val)
-	lirs.Set("E", val)
+	lirs.Set("A", []byte("A"))
+	lirs.Set("B", []byte("B"))
+	lirs.Set("C", []byte("C"))
+	lirs.Set("D", []byte("D"))
+	lirs.Set("E", []byte("E"))
 
 	return lirs
 
 }
 
 /******************************************************************************/
-// test prune stacks
+// test PRUNESTACKS
 /******************************************************************************/
 
 // should not remove anything of the end of stack S
@@ -180,7 +180,7 @@ func TestTailTrim(t *testing.T) {
 }
 
 // /******************************************************************************/
-// // test find
+// // test FIND
 // /******************************************************************************/
 
 // find 0th element
@@ -238,7 +238,7 @@ func TestFindEmpty(t *testing.T) {
 }
 
 // /******************************************************************************/
-// // test basic functions
+// // test MAXSTORAGE and LEN functions
 // /******************************************************************************/
 
 func TestMaxStorage(t *testing.T) {
@@ -335,6 +335,52 @@ func TestLen(t *testing.T) {
 // // test GET
 // /******************************************************************************/
 
+// fill cache and query every element in cache
+func TestBasicGet(t *testing.T) {
+	lirs := MakeStack()
+	value, _ := lirs.Get("A")
+	if bytes.Compare(value, []byte("A")) != 0 {
+		t.Errorf("GET failed")
+	}
+
+	value, _ = lirs.Get("B")
+	if bytes.Compare(value, []byte("B")) != 0 {
+		t.Errorf("GET failed")
+	}
+
+	value, _ = lirs.Get("C")
+	if bytes.Compare(value, []byte("C")) != 0 {
+		t.Errorf("GET failed")
+	}
+
+	value, _ = lirs.Get("D")
+	if bytes.Compare(value, []byte("D")) != 0 {
+		t.Errorf("GET failed")
+	}
+
+	value, _ = lirs.Get("E")
+	if bytes.Compare(value, []byte("E")) != 0 {
+		t.Errorf("GET failed")
+	}
+
+}
+
+// query elements not in the cache
+func TestBasicNot(t *testing.T) {
+	lirs := MakeStack()
+	_, ok := lirs.Get("F")
+	if ok == true {
+		t.Errorf("GET failed")
+	}
+
+	lirs.Remove("E")
+	_, ok = lirs.Get("E")
+	if ok == true {
+		t.Errorf("GET failed")
+	}
+
+}
+
 // /******************************************************************************/
 // // test REMOVE
 // /******************************************************************************/
@@ -347,47 +393,47 @@ func TestLen(t *testing.T) {
 // // test insertion order into empty cache
 // /******************************************************************************/
 
-// func TestAlg(t *testing.T) {
-// 	capacity := 5
-// 	lirs := NewLIRS(capacity)
-// 	val := []byte("X")
+func TestAlg(t *testing.T) {
+	capacity := 5
+	lirs := NewLIRS(capacity)
+	val := []byte("X")
 
-// 	key := "A"
-// 	lirs.Set(key, val)
-// 	lirs.GraphStacks()
+	key := "A"
+	lirs.Set(key, val)
+	lirs.GraphStacks()
 
-// 	key = "B"
-// 	lirs.Set(key, val)
-// 	lirs.GraphStacks()
+	key = "B"
+	lirs.Set(key, val)
+	lirs.GraphStacks()
 
-// 	key = "C"
-// 	lirs.Set(key, val)
-// 	lirs.GraphStacks()
+	key = "C"
+	lirs.Set(key, val)
+	lirs.GraphStacks()
 
-// 	key = "D"
-// 	lirs.Set(key, val)
-// 	lirs.GraphStacks()
+	key = "D"
+	lirs.Set(key, val)
+	lirs.GraphStacks()
 
-// 	key = "E"
-// 	lirs.Set(key, val)
-// 	lirs.GraphStacks()
+	key = "E"
+	lirs.Set(key, val)
+	lirs.GraphStacks()
 
-// 	lirs.Get("C")
-// 	lirs.GraphStacks()
+	lirs.Get("C")
+	lirs.GraphStacks()
 
-// 	lirs.Get("A")
-// 	lirs.GraphStacks()
+	lirs.Get("A")
+	lirs.GraphStacks()
 
-// 	lirs.Set("F", val)
-// 	lirs.GraphStacks()
+	lirs.Set("F", val)
+	lirs.GraphStacks()
 
-// 	lirs.Set("G", val)
-// 	lirs.GraphStacks()
+	lirs.Set("G", val)
+	lirs.GraphStacks()
 
-// 	fmt.Println(lirs.inUse)
-// 	fmt.Println(lirs.capacity)
+	fmt.Println(lirs.inUse)
+	fmt.Println(lirs.capacity)
 
-// }
+}
 
 // func TestInsertEmpty3(t *testing.T) {
 // 	// capacity := 3
