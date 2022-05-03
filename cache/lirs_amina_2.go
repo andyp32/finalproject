@@ -23,10 +23,6 @@ type Element struct {
 
 type Location struct {
 	key string
-	// inS bool
-	//indexS int
-	// inQ bool
-	//indexQ bool
 	// resident HIRS, non resident HIRS, or LIRS
 	status int
 }
@@ -36,9 +32,9 @@ type LIRS struct {
 	// max # of pages
 	capacity int
 	// capacity of LIR stack
-	LIRcap int
-	// capacity of HIR stack
-	HIRcap int
+	// LIRcap int
+	// // capacity of HIR stack
+	// HIRcap int
 	// # of pages in use
 	inUse int
 	//  LIRS stack
@@ -71,7 +67,18 @@ func NewLIRS(capacity int) *LIRS {
 	return lirs
 }
 
-func (lirs *LIRS) GraphStacks() {
+func PrintStatus(i int) {
+	if i == LIRS_P {
+		fmt.Print("LIR")
+	} else if i == HIRS {
+		fmt.Print("HIR")
+
+	} else {
+		fmt.Print("HIR-NR")
+	}
+}
+
+func (lirs *LIRS) GraphStacks() (S_ *deque.Deque, Q_ *deque.Deque) {
 	fmt.Println("========================================")
 
 	S := lirs.S
@@ -79,17 +86,23 @@ func (lirs *LIRS) GraphStacks() {
 	for i := 0; i < S.Len(); i++ {
 		current, _ := S.At(i).(*Element)
 		fmt.Print(" -> ")
-		fmt.Print("key: ", current.key, " status: ", current.status)
+		fmt.Print("(key: ", current.key, ", status: ")
+		PrintStatus(current.status)
+		fmt.Print(")")
 	}
 	fmt.Println()
 	for i := 0; i < Q.Len(); i++ {
 		current, _ := Q.At(i).(*Element)
 		fmt.Print(" -> ")
-		fmt.Print("key: ", current.key, " status: ", current.status)
+		fmt.Print("(key: ", current.key, ", status: ")
+		PrintStatus(current.status)
+		fmt.Print(")")
 	}
 	fmt.Println()
 
 	fmt.Println("========================================")
+
+	return S, Q
 
 }
 
@@ -543,66 +556,6 @@ func (lirs *LIRS) Set(key string, value []byte) bool {
 	lirs.S = S
 	return true
 }
-
-// // Set associates the given value with the given key, possibly evicting values
-// // to make room. Returns true if the binding was added successfully, else false.
-// func (lirs *LIRS) Set(key string, value []byte) bool {
-// 	Q := lirs.Q
-// 	S := lirs.S
-
-// 	foundKey := false
-// 	for i := 0; i < S.Len(); i++ {
-// 		elem, ok := S.At(i).(Element)
-// 		if ok {
-// 			if key == elem.key {
-// 				foundKey = true
-// 				_ = S.Remove(i)
-// 				if elem.status == HIRS {
-
-// 				} else if elem.status == HIRS_NR {
-
-// 					// elem.status = LIRS
-// 				} else {
-
-// 				}
-// 			}
-
-// 		} else {
-// 			// error
-// 		}
-// 	}
-// 	if !foundKey {
-// 		for i := 0; i < Q.Len(); i++ {
-// 			elem, ok := S.At(i).(Element)
-// 			if ok {
-// 				if key == elem.key {
-// 					foundKey = true
-// 					if elem.status == HIRS {
-
-// 					} else if elem.status == HIRS_NR {
-
-// 						// elem.status = LIRS
-// 					} else {
-
-// 					}
-// 				}
-// 			} else {
-// 				// error
-
-// 			}
-
-// 		}
-// 	}
-// 	if !foundKey {
-// 		if lirs.capacity == lirs.inUse {
-
-// 		} else {
-
-// 			lirs.inUse += 1
-// 		}
-// 	}
-// 	return false
-// }
 
 // Len returns the number of bindings in the LIRS.
 func (lirs *LIRS) Len() int {
